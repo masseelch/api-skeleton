@@ -350,7 +350,7 @@ func (uq *UserQuery) WithTransactions(opts ...func(*TransactionQuery)) *UserQuer
 // Example:
 //
 //	var v []struct {
-//		Email string `json:"email,omitempty" groups:"user:list"`
+//		Email string `json:"email,omitempty" groups:"user:list,auth:login"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -376,7 +376,7 @@ func (uq *UserQuery) GroupBy(field string, fields ...string) *UserGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Email string `json:"email,omitempty" groups:"user:list"`
+//		Email string `json:"email,omitempty" groups:"user:list,auth:login"`
 //	}
 //
 //	client.User.Query().

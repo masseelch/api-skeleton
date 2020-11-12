@@ -1,22 +1,20 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/account.dart';
+import '../model/user.dart';
+import '../model/transaction.dart';
 
-class AccountRepository {
-  AccountRepository({
-    @required this.dio,
-    @required this.url,
-  })  : assert(dio != null),
-        assert(url != null && url != '');
+class AccountClient {
+  AccountClient({@required this.dio}) : assert(dio != null);
 
   final Dio dio;
-  final String url;
 
   Future<Account> find(int id) async {
-    final r = await dio.get('/$url/$id');
+    final r = await dio.get('/accounts/$id');
     return Account.fromJson(r.data);
   }
 
@@ -39,7 +37,7 @@ class AccountRepository {
       params['title'] = title;
     }
 
-    final r = await dio.get('/$url');
+    final r = await dio.get('/accounts');
 
     if (r.data == null) {
       return [];
@@ -49,15 +47,25 @@ class AccountRepository {
   }
 
   Future<Account> create(Account e) async {
-    final r = await dio.post('/$url', data: e.toJson());
+    final r = await dio.post('/accounts', data: e.toJson());
     return (Account.fromJson(r.data));
   }
 
   Future<Account> update(Account e) async {
-    final r = await dio.patch('/$url', data: e.toJson());
+    final r = await dio.patch('/accounts', data: e.toJson());
     return (Account.fromJson(r.data));
   }
 
-  static AccountRepository of(BuildContext context) =>
-      Provider.of<AccountRepository>(context, listen: false);
+  Future<List<User>> users(Account e) async {
+    final r = await dio.get('/accounts/${e.id}/users');
+    return (r.data as List).map((i) => User.fromJson(i)).toList();
+  }
+
+  Future<List<Transaction>> transactions(Account e) async {
+    final r = await dio.get('/accounts/${e.id}/transactions');
+    return (r.data as List).map((i) => Transaction.fromJson(i)).toList();
+  }
+
+  static AccountClient of(BuildContext context) =>
+      Provider.of<AccountClient>(context, listen: false);
 }

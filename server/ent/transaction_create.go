@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"skeleton/ent/account"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 	"time"
@@ -56,6 +57,25 @@ func (tc *TransactionCreate) SetNillableUserID(id *int) *TransactionCreate {
 // SetUser sets the user edge to User.
 func (tc *TransactionCreate) SetUser(u *User) *TransactionCreate {
 	return tc.SetUserID(u.ID)
+}
+
+// SetAccountID sets the account edge to Account by id.
+func (tc *TransactionCreate) SetAccountID(id int) *TransactionCreate {
+	tc.mutation.SetAccountID(id)
+	return tc
+}
+
+// SetNillableAccountID sets the account edge to Account by id if the given value is not nil.
+func (tc *TransactionCreate) SetNillableAccountID(id *int) *TransactionCreate {
+	if id != nil {
+		tc = tc.SetAccountID(*id)
+	}
+	return tc
+}
+
+// SetAccount sets the account edge to Account.
+func (tc *TransactionCreate) SetAccount(a *Account) *TransactionCreate {
+	return tc.SetAccountID(a.ID)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -175,6 +195,25 @@ func (tc *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.AccountIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   transaction.AccountTable,
+			Columns: []string{transaction.AccountColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: account.FieldID,
 				},
 			},
 		}

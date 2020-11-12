@@ -1,22 +1,20 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/transaction.dart';
+import '../model/user.dart';
+import '../model/account.dart';
 
-class TransactionRepository {
-  TransactionRepository({
-    @required this.dio,
-    @required this.url,
-  })  : assert(dio != null),
-        assert(url != null && url != '');
+class TransactionClient {
+  TransactionClient({@required this.dio}) : assert(dio != null);
 
   final Dio dio;
-  final String url;
 
   Future<Transaction> find(int id) async {
-    final r = await dio.get('/$url/$id');
+    final r = await dio.get('/transactions/$id');
     return Transaction.fromJson(r.data);
   }
 
@@ -44,7 +42,7 @@ class TransactionRepository {
       params['amount'] = amount;
     }
 
-    final r = await dio.get('/$url');
+    final r = await dio.get('/transactions');
 
     if (r.data == null) {
       return [];
@@ -54,15 +52,25 @@ class TransactionRepository {
   }
 
   Future<Transaction> create(Transaction e) async {
-    final r = await dio.post('/$url', data: e.toJson());
+    final r = await dio.post('/transactions', data: e.toJson());
     return (Transaction.fromJson(r.data));
   }
 
   Future<Transaction> update(Transaction e) async {
-    final r = await dio.patch('/$url', data: e.toJson());
+    final r = await dio.patch('/transactions', data: e.toJson());
     return (Transaction.fromJson(r.data));
   }
 
-  static TransactionRepository of(BuildContext context) =>
-      Provider.of<TransactionRepository>(context, listen: false);
+  Future<User> user(Transaction e) async {
+    final r = await dio.get('/transactions/${e.id}/user');
+    return (User.fromJson(r.data));
+  }
+
+  Future<Account> account(Transaction e) async {
+    final r = await dio.get('/transactions/${e.id}/account');
+    return (Account.fromJson(r.data));
+  }
+
+  static TransactionClient of(BuildContext context) =>
+      Provider.of<TransactionClient>(context, listen: false);
 }

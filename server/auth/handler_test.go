@@ -153,6 +153,11 @@ func TestLoginHandler(t *testing.T) {
 				assert.IsType(t, "", d["token"])
 				assert.Len(t, d["token"], 64)
 
+				// User is set on the token.
+				assert.Contains(t, d, "edges")
+				assert.Contains(t, d["edges"], "user")
+				assert.Contains(t, (d["edges"].(map[string]interface{}))["user"], "id")
+
 				// There must be exactly one session now.
 				n, err := c.Session.Query().Count(context.Background())
 				assert.NoError(t, err)

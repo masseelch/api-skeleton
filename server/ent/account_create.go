@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"skeleton/ent/account"
+	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
@@ -45,6 +46,21 @@ func (ac *AccountCreate) AddUsers(u ...*User) *AccountCreate {
 		ids[i] = u[i].ID
 	}
 	return ac.AddUserIDs(ids...)
+}
+
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (ac *AccountCreate) AddTransactionIDs(ids ...int) *AccountCreate {
+	ac.mutation.AddTransactionIDs(ids...)
+	return ac
+}
+
+// AddTransactions adds the transactions edges to Transaction.
+func (ac *AccountCreate) AddTransactions(t ...*Transaction) *AccountCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddTransactionIDs(ids...)
 }
 
 // Mutation returns the AccountMutation object of the builder.
@@ -153,6 +169,25 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   account.TransactionsTable,
+			Columns: []string{account.TransactionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
 				},
 			},
 		}

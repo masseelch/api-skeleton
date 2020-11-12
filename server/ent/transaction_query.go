@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"skeleton/ent/account"
 	"skeleton/ent/predicate"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
@@ -25,8 +26,9 @@ type TransactionQuery struct {
 	unique     []string
 	predicates []predicate.Transaction
 	// eager-loading edges.
-	withUser *UserQuery
-	withFKs  bool
+	withUser    *UserQuery
+	withAccount *AccountQuery
+	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -71,6 +73,28 @@ func (tq *TransactionQuery) QueryUser() *UserQuery {
 			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, transaction.UserTable, transaction.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAccount chains the current query on the account edge.
+func (tq *TransactionQuery) QueryAccount() *AccountQuery {
+	query := &AccountQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
+			sqlgraph.To(account.Table, account.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, transaction.AccountTable, transaction.AccountColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -248,13 +272,14 @@ func (tq *TransactionQuery) Clone() *TransactionQuery {
 		return nil
 	}
 	return &TransactionQuery{
-		config:     tq.config,
-		limit:      tq.limit,
-		offset:     tq.offset,
-		order:      append([]OrderFunc{}, tq.order...),
-		unique:     append([]string{}, tq.unique...),
-		predicates: append([]predicate.Transaction{}, tq.predicates...),
-		withUser:   tq.withUser.Clone(),
+		config:      tq.config,
+		limit:       tq.limit,
+		offset:      tq.offset,
+		order:       append([]OrderFunc{}, tq.order...),
+		unique:      append([]string{}, tq.unique...),
+		predicates:  append([]predicate.Transaction{}, tq.predicates...),
+		withUser:    tq.withUser.Clone(),
+		withAccount: tq.withAccount.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -269,6 +294,17 @@ func (tq *TransactionQuery) WithUser(opts ...func(*UserQuery)) *TransactionQuery
 		opt(query)
 	}
 	tq.withUser = query
+	return tq
+}
+
+//  WithAccount tells the query-builder to eager-loads the nodes that are connected to
+// the "account" edge. The optional arguments used to configure the query builder of the edge.
+func (tq *TransactionQuery) WithAccount(opts ...func(*AccountQuery)) *TransactionQuery {
+	query := &AccountQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withAccount = query
 	return tq
 }
 
@@ -339,11 +375,12 @@ func (tq *TransactionQuery) sqlAll(ctx context.Context) ([]*Transaction, error) 
 		nodes       = []*Transaction{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			tq.withUser != nil,
+			tq.withAccount != nil,
 		}
 	)
-	if tq.withUser != nil {
+	if tq.withUser != nil || tq.withAccount != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -394,6 +431,31 @@ func (tq *TransactionQuery) sqlAll(ctx context.Context) ([]*Transaction, error) 
 			}
 			for i := range nodes {
 				nodes[i].Edges.User = n
+			}
+		}
+	}
+
+	if query := tq.withAccount; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Transaction)
+		for i := range nodes {
+			if fk := nodes[i].account_transactions; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
+		}
+		query.Where(account.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "account_transactions" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Account = n
 			}
 		}
 	}

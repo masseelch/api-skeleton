@@ -19,10 +19,11 @@ func (Session) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("id").
 			GoType(token.Token("")).
-			StructTag(`json:"token"`),
+			StructTag(`json:"token" groups:"auth:login"`),
 		field.Time("idleTimeExpiredAt"),
 		field.Time("lifeTimeExpiredAt").
-			Immutable(),
+			Immutable().
+			StructTag(`groups:"auth:login"`),
 	}
 }
 
@@ -31,13 +32,19 @@ func (Session) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).
 			Ref("sessions").
-			Unique(),
+			Unique().
+			StructTag(`json:"user" groups:"auth:login"`),
 	}
 }
 
 // Annotations of the Session.
 func (Session) Annotations() []schema.Annotation {
 	return []schema.Annotation{
-		elk.HandlerAnnotation{SkipGeneration: true},
+		elk.HandlerAnnotation{
+			SkipGeneration: true,
+		},
+		edge.Annotation{
+			StructTag: `json:"edges" groups:"auth:login"`,
+		},
 	}
 }

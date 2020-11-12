@@ -10,8 +10,11 @@ import (
 	"net/http"
 	"skeleton/auth"
 	"skeleton/ent"
+	"skeleton/ent/handler"
 	"skeleton/util"
+	"time"
 
+	"github.com/facebook/ent/dialect/sql"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	_ "github.com/go-sql-driver/mysql"
@@ -30,11 +33,13 @@ var serveCmd = &cobra.Command{
 		}
 
 		// Get a database connection for ent.
-		c, err := ent.Open("mysql", util.MysqlDSN())
+		drv, err := sql.Open("mysql", util.MysqlDSN())
 		if err != nil {
 			panic(err)
 		}
-		defer c.Close()
+		defer drv.Close()
+		drv.DB().SetConnMaxLifetime(time.Second)
+		c := ent.NewClient(ent.Driver(drv))
 
 		// Create a validator.
 		v := util.Validator()
@@ -54,8 +59,12 @@ var serveCmd = &cobra.Command{
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware(c, l))
 
-			// r.Mount("/jobs", handler.NewJobHandler(c, v, l).EnableAllEndpoints())
-			// r.Mount("/users", handler.NewUserHandler(c, v, l).EnableAllEndpoints())
+			r.Mount("/users", handler.NewUserHandler(c, v, l).EnableAllEndpoints())
+
+			// Accounts
+			accountHandler := handler.NewAccountHandler(c, v, l).EnableAllEndpoints()
+			accountHandler.Get("/{id:\\d+}/meta", accountHandler.Meta)
+			r.Mount("/accounts", accountHandler)
 		})
 
 		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", p), r))

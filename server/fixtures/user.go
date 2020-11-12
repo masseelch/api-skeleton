@@ -16,6 +16,11 @@ func (r refs) user() *ent.User {
 	return m[rand.Intn(len(m))]
 }
 
+func (r refs) defaultUser() *ent.User {
+	m := r[userKey].([]*ent.User)
+	return m[0]
+}
+
 func users(refs refs, c *ent.Client) error {
 	p, err := bcrypt.GenerateFromPassword([]byte("passw0rd!"), 0)
 	if err != nil {

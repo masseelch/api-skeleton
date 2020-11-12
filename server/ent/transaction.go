@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"skeleton/ent/account"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 	"time"
@@ -22,17 +23,20 @@ type Transaction struct {
 	Amount int `json:"amount,omitempty" groups:"transaction:list"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TransactionQuery when eager-loading is set.
-	Edges             TransactionEdges `json:"edges"`
-	user_transactions *int
+	Edges                TransactionEdges `json:"edges" groups:"transaction:list"`
+	account_transactions *int
+	user_transactions    *int
 }
 
 // TransactionEdges holds the relations/edges for other nodes in the graph.
 type TransactionEdges struct {
 	// User holds the value of the user edge.
-	User *User
+	User *User `json:"user,omitempty" groups:"transaction:list"`
+	// Account holds the value of the account edge.
+	Account *Account `json:"account,omitempty" groups:"transaction:list"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -49,6 +53,20 @@ func (e TransactionEdges) UserOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "user"}
 }
 
+// AccountOrErr returns the Account value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e TransactionEdges) AccountOrErr() (*Account, error) {
+	if e.loadedTypes[1] {
+		if e.Account == nil {
+			// The edge account was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: account.Label}
+		}
+		return e.Account, nil
+	}
+	return nil, &NotLoadedError{edge: "account"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Transaction) scanValues() []interface{} {
 	return []interface{}{
@@ -61,6 +79,7 @@ func (*Transaction) scanValues() []interface{} {
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Transaction) fkValues() []interface{} {
 	return []interface{}{
+		&sql.NullInt64{}, // account_transactions
 		&sql.NullInt64{}, // user_transactions
 	}
 }
@@ -90,6 +109,12 @@ func (t *Transaction) assignValues(values ...interface{}) error {
 	values = values[2:]
 	if len(values) == len(transaction.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
+			return fmt.Errorf("unexpected type %T for edge-field account_transactions", value)
+		} else if value.Valid {
+			t.account_transactions = new(int)
+			*t.account_transactions = int(value.Int64)
+		}
+		if value, ok := values[1].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field user_transactions", value)
 		} else if value.Valid {
 			t.user_transactions = new(int)
@@ -102,6 +127,11 @@ func (t *Transaction) assignValues(values ...interface{}) error {
 // QueryUser queries the user edge of the Transaction.
 func (t *Transaction) QueryUser() *UserQuery {
 	return (&TransactionClient{config: t.config}).QueryUser(t)
+}
+
+// QueryAccount queries the account edge of the Transaction.
+func (t *Transaction) QueryAccount() *AccountQuery {
+	return (&TransactionClient{config: t.config}).QueryAccount(t)
 }
 
 // Update returns a builder for updating this Transaction.

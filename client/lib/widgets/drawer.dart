@@ -21,15 +21,62 @@ class AppDrawer extends StatelessWidget {
             decoration: BoxDecoration(color: theme.colorScheme.primary),
           ),
           const Divider(),
-          const _Logout(),
+          const DashboardDrawerTile(),
+          const Divider(),
+          const _LogoutDrawerTile(),
         ],
       ),
     );
   }
 }
 
-class _Logout extends StatelessWidget {
-  const _Logout();
+
+class _DrawerListTile extends StatelessWidget {
+  const _DrawerListTile({
+    @required this.iconData,
+    @required this.title,
+    @required this.url,
+  })  : assert(iconData != null),
+        assert(title != null),
+        assert(url != null);
+
+  final IconData iconData;
+  final String title;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(iconData, color: Theme.of(context).primaryColor),
+      title: Text(title),
+      onTap: () => _navigateNamed(context, url),
+    );
+  }
+}
+
+class DashboardDrawerTile extends StatelessWidget {
+  const DashboardDrawerTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return _DrawerListTile(
+      iconData: Icons.apps,
+      title: 'Dashboard', //AppLocalizations.of(context).storagesTitle,
+      url: '/home',
+    );
+  }
+}
+
+void _navigateNamed(BuildContext context, String name) {
+  Navigator.pushNamedAndRemoveUntil(
+    context,
+    name,
+        (_) => false,
+  );
+}
+
+class _LogoutDrawerTile extends StatelessWidget {
+  const _LogoutDrawerTile();
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +89,8 @@ class _Logout extends StatelessWidget {
       ),
       leading: Icon(Icons.exit_to_app, color: theme.errorColor),
       onTap: () async {
-        if (await TokenService.of(context).deleteToken()) {
-          Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+        if (await TokenService.of(context).logout()) {
+          _navigateNamed(context, '/login');
         } else {
           // todo - error handling (unlikely to occur though)
         }

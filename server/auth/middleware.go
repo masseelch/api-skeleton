@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	sessionCtx = "go_api_skeleton_session_ctx"
+	sessionCtx = "session_ctx"
 )
 
 var (

@@ -14,23 +14,23 @@ import (
 
 // Session is the model entity for the Session schema.
 type Session struct {
-	config `json:"-"`
+	config `groups:"-" json:"-"`
 	// ID of the ent.
-	ID token.Token `json:"token"`
+	ID token.Token `json:"token" groups:"auth:login"`
 	// IdleTimeExpiredAt holds the value of the "idleTimeExpiredAt" field.
 	IdleTimeExpiredAt time.Time `json:"idleTimeExpiredAt,omitempty"`
 	// LifeTimeExpiredAt holds the value of the "lifeTimeExpiredAt" field.
-	LifeTimeExpiredAt time.Time `json:"lifeTimeExpiredAt,omitempty"`
+	LifeTimeExpiredAt time.Time `json:"lifeTimeExpiredAt,omitempty" groups:"auth:login"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SessionQuery when eager-loading is set.
-	Edges         SessionEdges `json:"edges"`
+	Edges         SessionEdges `json:"edges" groups:"auth:login"`
 	user_sessions *int
 }
 
 // SessionEdges holds the relations/edges for other nodes in the graph.
 type SessionEdges struct {
 	// User holds the value of the user edge.
-	User *User
+	User *User `json:"user" groups:"auth:login"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool

@@ -1,22 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/session.dart';
+import '../model/user.dart';
 
-class SessionRepository {
-  SessionRepository({
-    @required this.dio,
-    @required this.url,
-  })  : assert(dio != null),
-        assert(url != null && url != '');
+class SessionClient {
+  SessionClient({@required this.dio}) : assert(dio != null);
 
   final Dio dio;
-  final String url;
 
   Future<Session> find(String id) async {
-    final r = await dio.get('/$url/$id');
+    final r = await dio.get('/sessions/$id');
     return Session.fromJson(r.data);
   }
 
@@ -44,7 +41,7 @@ class SessionRepository {
       params['lifeTimeExpiredAt'] = lifeTimeExpiredAt;
     }
 
-    final r = await dio.get('/$url');
+    final r = await dio.get('/sessions');
 
     if (r.data == null) {
       return [];
@@ -54,15 +51,20 @@ class SessionRepository {
   }
 
   Future<Session> create(Session e) async {
-    final r = await dio.post('/$url', data: e.toJson());
+    final r = await dio.post('/sessions', data: e.toJson());
     return (Session.fromJson(r.data));
   }
 
   Future<Session> update(Session e) async {
-    final r = await dio.patch('/$url', data: e.toJson());
+    final r = await dio.patch('/sessions', data: e.toJson());
     return (Session.fromJson(r.data));
   }
 
-  static SessionRepository of(BuildContext context) =>
-      Provider.of<SessionRepository>(context, listen: false);
+  Future<User> user(Session e) async {
+    final r = await dio.get('/sessions/${e.id}/user');
+    return (User.fromJson(r.data));
+  }
+
+  static SessionClient of(BuildContext context) =>
+      Provider.of<SessionClient>(context, listen: false);
 }

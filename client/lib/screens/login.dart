@@ -1,8 +1,8 @@
-import 'package:client/services/token.dart';
 import 'package:flutter/material.dart';
 
 import '../config.dart';
 import '../dialogs/loading.dart';
+import '../generated/model/user.dart';
 import '../services/token.dart';
 import '../snackbars/error.dart';
 import '../utils/dio.dart';
@@ -161,8 +161,11 @@ class _LoginScreenState extends State<LoginScreen> {
           'password': _password,
         });
 
-        if (await TokenService.of(context).setToken(r.data['token'])) {
-          Navigator.pushNamedAndRemoveUntil(context, '/home', (_) => false);
+        if (await TokenService.of(context).login(
+          r.data['token'],
+          User.fromJson(r.data['edges']['user']),
+        )) {
+          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (_) => false);
         } else {
           showErrorSnackBar(context, scaffold: _scaffoldKey.currentState);
           hideLoadingDialog(context);

@@ -14,6 +14,8 @@ const (
 
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
+	// EdgeAccount holds the string denoting the account edge name in mutations.
+	EdgeAccount = "account"
 
 	// Table holds the table name of the transaction in the database.
 	Table = "transactions"
@@ -24,6 +26,13 @@ const (
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
 	UserColumn = "user_transactions"
+	// AccountTable is the table the holds the account relation/edge.
+	AccountTable = "transactions"
+	// AccountInverseTable is the table name for the Account entity.
+	// It exists in this package in order to avoid circular dependency with the "account" package.
+	AccountInverseTable = "accounts"
+	// AccountColumn is the table column denoting the account relation/edge.
+	AccountColumn = "account_transactions"
 )
 
 // Columns holds all SQL columns for transaction fields.
@@ -35,6 +44,7 @@ var Columns = []string{
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Transaction type.
 var ForeignKeys = []string{
+	"account_transactions",
 	"user_transactions",
 }
 

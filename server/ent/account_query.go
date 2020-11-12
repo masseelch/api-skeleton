@@ -10,6 +10,7 @@ import (
 	"math"
 	"skeleton/ent/account"
 	"skeleton/ent/predicate"
+	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 
 	"github.com/facebook/ent/dialect/sql"
@@ -26,7 +27,8 @@ type AccountQuery struct {
 	unique     []string
 	predicates []predicate.Account
 	// eager-loading edges.
-	withUsers *UserQuery
+	withUsers        *UserQuery
+	withTransactions *TransactionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -71,6 +73,28 @@ func (aq *AccountQuery) QueryUsers() *UserQuery {
 			sqlgraph.From(account.Table, account.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, account.UsersTable, account.UsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTransactions chains the current query on the transactions edge.
+func (aq *AccountQuery) QueryTransactions() *TransactionQuery {
+	query := &TransactionQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(account.Table, account.FieldID, selector),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, account.TransactionsTable, account.TransactionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -248,13 +272,14 @@ func (aq *AccountQuery) Clone() *AccountQuery {
 		return nil
 	}
 	return &AccountQuery{
-		config:     aq.config,
-		limit:      aq.limit,
-		offset:     aq.offset,
-		order:      append([]OrderFunc{}, aq.order...),
-		unique:     append([]string{}, aq.unique...),
-		predicates: append([]predicate.Account{}, aq.predicates...),
-		withUsers:  aq.withUsers.Clone(),
+		config:           aq.config,
+		limit:            aq.limit,
+		offset:           aq.offset,
+		order:            append([]OrderFunc{}, aq.order...),
+		unique:           append([]string{}, aq.unique...),
+		predicates:       append([]predicate.Account{}, aq.predicates...),
+		withUsers:        aq.withUsers.Clone(),
+		withTransactions: aq.withTransactions.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -269,6 +294,17 @@ func (aq *AccountQuery) WithUsers(opts ...func(*UserQuery)) *AccountQuery {
 		opt(query)
 	}
 	aq.withUsers = query
+	return aq
+}
+
+//  WithTransactions tells the query-builder to eager-loads the nodes that are connected to
+// the "transactions" edge. The optional arguments used to configure the query builder of the edge.
+func (aq *AccountQuery) WithTransactions(opts ...func(*TransactionQuery)) *AccountQuery {
+	query := &TransactionQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withTransactions = query
 	return aq
 }
 
@@ -338,8 +374,9 @@ func (aq *AccountQuery) sqlAll(ctx context.Context) ([]*Account, error) {
 	var (
 		nodes       = []*Account{}
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withUsers != nil,
+			aq.withTransactions != nil,
 		}
 	)
 	_spec.ScanValues = func() []interface{} {
@@ -424,6 +461,35 @@ func (aq *AccountQuery) sqlAll(ctx context.Context) ([]*Account, error) {
 			for i := range nodes {
 				nodes[i].Edges.Users = append(nodes[i].Edges.Users, n)
 			}
+		}
+	}
+
+	if query := aq.withTransactions; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Account)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.Transactions = []*Transaction{}
+		}
+		query.withFKs = true
+		query.Where(predicate.Transaction(func(s *sql.Selector) {
+			s.Where(sql.InValues(account.TransactionsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.account_transactions
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "account_transactions" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "account_transactions" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Transactions = append(node.Edges.Transactions, n)
 		}
 	}
 

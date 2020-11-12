@@ -1,22 +1,18 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/tag.dart';
 
-class TagRepository {
-  TagRepository({
-    @required this.dio,
-    @required this.url,
-  })  : assert(dio != null),
-        assert(url != null && url != '');
+class TagClient {
+  TagClient({@required this.dio}) : assert(dio != null);
 
   final Dio dio;
-  final String url;
 
   Future<Tag> find(int id) async {
-    final r = await dio.get('/$url/$id');
+    final r = await dio.get('/tags/$id');
     return Tag.fromJson(r.data);
   }
 
@@ -44,7 +40,7 @@ class TagRepository {
       params['description'] = description;
     }
 
-    final r = await dio.get('/$url');
+    final r = await dio.get('/tags');
 
     if (r.data == null) {
       return [];
@@ -54,15 +50,15 @@ class TagRepository {
   }
 
   Future<Tag> create(Tag e) async {
-    final r = await dio.post('/$url', data: e.toJson());
+    final r = await dio.post('/tags', data: e.toJson());
     return (Tag.fromJson(r.data));
   }
 
   Future<Tag> update(Tag e) async {
-    final r = await dio.patch('/$url', data: e.toJson());
+    final r = await dio.patch('/tags', data: e.toJson());
     return (Tag.fromJson(r.data));
   }
 
-  static TagRepository of(BuildContext context) =>
-      Provider.of<TagRepository>(context, listen: false);
+  static TagClient of(BuildContext context) =>
+      Provider.of<TagClient>(context, listen: false);
 }

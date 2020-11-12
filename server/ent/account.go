@@ -18,16 +18,18 @@ type Account struct {
 	Title string `json:"title,omitempty" groups:"account:list"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AccountQuery when eager-loading is set.
-	Edges AccountEdges `json:"edges"`
+	Edges AccountEdges `json:"edges" groups:"account:list"`
 }
 
 // AccountEdges holds the relations/edges for other nodes in the graph.
 type AccountEdges struct {
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty" groups:"account:list,account:read"`
+	// Transactions holds the value of the transactions edge.
+	Transactions []*Transaction `json:"transactions,omitempty" groups:"account:list,account:read"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // UsersOrErr returns the Users value or an error if the edge
@@ -37,6 +39,15 @@ func (e AccountEdges) UsersOrErr() ([]*User, error) {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
+}
+
+// TransactionsOrErr returns the Transactions value or an error if the edge
+// was not loaded in eager-loading.
+func (e AccountEdges) TransactionsOrErr() ([]*Transaction, error) {
+	if e.loadedTypes[1] {
+		return e.Transactions, nil
+	}
+	return nil, &NotLoadedError{edge: "transactions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -70,6 +81,11 @@ func (a *Account) assignValues(values ...interface{}) error {
 // QueryUsers queries the users edge of the Account.
 func (a *Account) QueryUsers() *UserQuery {
 	return (&AccountClient{config: a.config}).QueryUsers(a)
+}
+
+// QueryTransactions queries the transactions edge of the Account.
+func (a *Account) QueryTransactions() *TransactionQuery {
+	return (&AccountClient{config: a.config}).QueryTransactions(a)
 }
 
 // Update returns a builder for updating this Account.

@@ -38,17 +38,20 @@ const (
 // nodes in the graph.
 type AccountMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	title         *string
-	clearedFields map[string]struct{}
-	users         map[int]struct{}
-	removedusers  map[int]struct{}
-	clearedusers  bool
-	done          bool
-	oldValue      func(context.Context) (*Account, error)
-	predicates    []predicate.Account
+	op                  Op
+	typ                 string
+	id                  *int
+	title               *string
+	clearedFields       map[string]struct{}
+	users               map[int]struct{}
+	removedusers        map[int]struct{}
+	clearedusers        bool
+	transactions        map[int]struct{}
+	removedtransactions map[int]struct{}
+	clearedtransactions bool
+	done                bool
+	oldValue            func(context.Context) (*Account, error)
+	predicates          []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
@@ -226,6 +229,59 @@ func (m *AccountMutation) ResetUsers() {
 	m.removedusers = nil
 }
 
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (m *AccountMutation) AddTransactionIDs(ids ...int) {
+	if m.transactions == nil {
+		m.transactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.transactions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTransactions clears the transactions edge to Transaction.
+func (m *AccountMutation) ClearTransactions() {
+	m.clearedtransactions = true
+}
+
+// TransactionsCleared returns if the edge transactions was cleared.
+func (m *AccountMutation) TransactionsCleared() bool {
+	return m.clearedtransactions
+}
+
+// RemoveTransactionIDs removes the transactions edge to Transaction by ids.
+func (m *AccountMutation) RemoveTransactionIDs(ids ...int) {
+	if m.removedtransactions == nil {
+		m.removedtransactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedtransactions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTransactions returns the removed ids of transactions.
+func (m *AccountMutation) RemovedTransactionsIDs() (ids []int) {
+	for id := range m.removedtransactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TransactionsIDs returns the transactions ids in the mutation.
+func (m *AccountMutation) TransactionsIDs() (ids []int) {
+	for id := range m.transactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTransactions reset all changes of the "transactions" edge.
+func (m *AccountMutation) ResetTransactions() {
+	m.transactions = nil
+	m.clearedtransactions = false
+	m.removedtransactions = nil
+}
+
 // Op returns the operation name.
 func (m *AccountMutation) Op() Op {
 	return m.op
@@ -341,9 +397,12 @@ func (m *AccountMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *AccountMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.users != nil {
 		edges = append(edges, account.EdgeUsers)
+	}
+	if m.transactions != nil {
+		edges = append(edges, account.EdgeTransactions)
 	}
 	return edges
 }
@@ -358,6 +417,12 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.transactions))
+		for id := range m.transactions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
@@ -365,9 +430,12 @@ func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *AccountMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedusers != nil {
 		edges = append(edges, account.EdgeUsers)
+	}
+	if m.removedtransactions != nil {
+		edges = append(edges, account.EdgeTransactions)
 	}
 	return edges
 }
@@ -382,6 +450,12 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case account.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.removedtransactions))
+		for id := range m.removedtransactions {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
@@ -389,9 +463,12 @@ func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *AccountMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedusers {
 		edges = append(edges, account.EdgeUsers)
+	}
+	if m.clearedtransactions {
+		edges = append(edges, account.EdgeTransactions)
 	}
 	return edges
 }
@@ -402,6 +479,8 @@ func (m *AccountMutation) EdgeCleared(name string) bool {
 	switch name {
 	case account.EdgeUsers:
 		return m.clearedusers
+	case account.EdgeTransactions:
+		return m.clearedtransactions
 	}
 	return false
 }
@@ -421,6 +500,9 @@ func (m *AccountMutation) ResetEdge(name string) error {
 	switch name {
 	case account.EdgeUsers:
 		m.ResetUsers()
+		return nil
+	case account.EdgeTransactions:
+		m.ResetTransactions()
 		return nil
 	}
 	return fmt.Errorf("unknown Account edge %s", name)
@@ -1231,18 +1313,20 @@ func (m *TagMutation) ResetEdge(name string) error {
 // nodes in the graph.
 type TransactionMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	date          *time.Time
-	amount        *int
-	addamount     *int
-	clearedFields map[string]struct{}
-	user          *int
-	cleareduser   bool
-	done          bool
-	oldValue      func(context.Context) (*Transaction, error)
-	predicates    []predicate.Transaction
+	op             Op
+	typ            string
+	id             *int
+	date           *time.Time
+	amount         *int
+	addamount      *int
+	clearedFields  map[string]struct{}
+	user           *int
+	cleareduser    bool
+	account        *int
+	clearedaccount bool
+	done           bool
+	oldValue       func(context.Context) (*Transaction, error)
+	predicates     []predicate.Transaction
 }
 
 var _ ent.Mutation = (*TransactionMutation)(nil)
@@ -1463,6 +1547,45 @@ func (m *TransactionMutation) ResetUser() {
 	m.cleareduser = false
 }
 
+// SetAccountID sets the account edge to Account by id.
+func (m *TransactionMutation) SetAccountID(id int) {
+	m.account = &id
+}
+
+// ClearAccount clears the account edge to Account.
+func (m *TransactionMutation) ClearAccount() {
+	m.clearedaccount = true
+}
+
+// AccountCleared returns if the edge account was cleared.
+func (m *TransactionMutation) AccountCleared() bool {
+	return m.clearedaccount
+}
+
+// AccountID returns the account id in the mutation.
+func (m *TransactionMutation) AccountID() (id int, exists bool) {
+	if m.account != nil {
+		return *m.account, true
+	}
+	return
+}
+
+// AccountIDs returns the account ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// AccountID instead. It exists only for internal usage by the builders.
+func (m *TransactionMutation) AccountIDs() (ids []int) {
+	if id := m.account; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAccount reset all changes of the "account" edge.
+func (m *TransactionMutation) ResetAccount() {
+	m.account = nil
+	m.clearedaccount = false
+}
+
 // Op returns the operation name.
 func (m *TransactionMutation) Op() Op {
 	return m.op
@@ -1610,9 +1733,12 @@ func (m *TransactionMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *TransactionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.user != nil {
 		edges = append(edges, transaction.EdgeUser)
+	}
+	if m.account != nil {
+		edges = append(edges, transaction.EdgeAccount)
 	}
 	return edges
 }
@@ -1625,6 +1751,10 @@ func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.user; id != nil {
 			return []ent.Value{*id}
 		}
+	case transaction.EdgeAccount:
+		if id := m.account; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
@@ -1632,7 +1762,7 @@ func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *TransactionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	return edges
 }
 
@@ -1647,9 +1777,12 @@ func (m *TransactionMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *TransactionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.cleareduser {
 		edges = append(edges, transaction.EdgeUser)
+	}
+	if m.clearedaccount {
+		edges = append(edges, transaction.EdgeAccount)
 	}
 	return edges
 }
@@ -1660,6 +1793,8 @@ func (m *TransactionMutation) EdgeCleared(name string) bool {
 	switch name {
 	case transaction.EdgeUser:
 		return m.cleareduser
+	case transaction.EdgeAccount:
+		return m.clearedaccount
 	}
 	return false
 }
@@ -1670,6 +1805,9 @@ func (m *TransactionMutation) ClearEdge(name string) error {
 	switch name {
 	case transaction.EdgeUser:
 		m.ClearUser()
+		return nil
+	case transaction.EdgeAccount:
+		m.ClearAccount()
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction unique edge %s", name)
@@ -1682,6 +1820,9 @@ func (m *TransactionMutation) ResetEdge(name string) error {
 	switch name {
 	case transaction.EdgeUser:
 		m.ResetUser()
+		return nil
+	case transaction.EdgeAccount:
+		m.ResetAccount()
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction edge %s", name)

@@ -13,13 +13,13 @@ import (
 type User struct {
 	config `groups:"-" json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty" groups:"user:list"`
+	ID int `json:"id,omitempty" groups:"user:list,auth:login"`
 	// Email holds the value of the "email" field.
-	Email string `json:"email,omitempty" groups:"user:list"`
+	Email string `json:"email,omitempty" groups:"user:list,auth:login"`
 	// Password holds the value of the "password" field.
 	Password string `groups:"-" json:"-"`
 	// Enabled holds the value of the "enabled" field.
-	Enabled bool `json:"enabled,omitempty" groups:"user:list"`
+	Enabled bool `json:"enabled,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges UserEdges `json:"edges" groups:"user:read"`

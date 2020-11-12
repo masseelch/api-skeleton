@@ -2,6 +2,7 @@ package schema
 
 import (
 	"github.com/facebook/ent"
+	"github.com/facebook/ent/schema"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
 )
@@ -26,5 +27,16 @@ func (Account) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("users", User.Type).
 			StructTag(`json:"users,omitempty" groups:"account:list,account:read"`),
+		edge.To("transactions", Transaction.Type).
+			StructTag(`json:"transactions,omitempty" groups:"account:list,account:read"`),
+	}
+}
+
+// Annotations of the Transaction.
+func (Account) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		edge.Annotation{
+			StructTag: `json:"edges" groups:"account:list"`,
+		},
 	}
 }

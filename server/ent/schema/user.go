@@ -19,16 +19,15 @@ type User struct {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("id").
-			StructTag(`groups:"user:list"`),
+			StructTag(`groups:"user:list,auth:login"`),
 		field.String("email").
 			Unique().
 			Match(regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")).
-			StructTag(`groups:"user:list"`),
+			StructTag(`groups:"user:list,auth:login"`),
 		field.String("password").
 			Sensitive(),
 		field.Bool("enabled").
-			Default(false).
-			StructTag(`groups:"user:list"`),
+			Default(false),
 	}
 }
 

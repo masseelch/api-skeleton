@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/liip/sheriff"
 	"github.com/masseelch/go-token"
 	"github.com/masseelch/render"
 	"github.com/sirupsen/logrus"
@@ -88,7 +89,16 @@ func LoginHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) http
 			return
 		}
 
+		s.Edges.User = u
+
+		d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"auth:login"}}, s)
+		if err != nil {
+			log.WithError(err).Error("serialization error")
+			render.InternalServerError(w, r, nil)
+			return
+		}
+
 		log.WithField("email", cr.Email).Info(logUserLoggedIn)
-		render.OK(w, r, s)
+		render.OK(w, r, d)
 	}
 }

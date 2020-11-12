@@ -60,6 +60,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "date", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeInt},
+		{Name: "account_transactions", Type: field.TypeInt, Nullable: true},
 		{Name: "user_transactions", Type: field.TypeInt, Nullable: true},
 	}
 	// TransactionsTable holds the schema information for the "transactions" table.
@@ -69,8 +70,15 @@ var (
 		PrimaryKey: []*schema.Column{TransactionsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "transactions_users_transactions",
+				Symbol:  "transactions_accounts_transactions",
 				Columns: []*schema.Column{TransactionsColumns[3]},
+
+				RefColumns: []*schema.Column{AccountsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "transactions_users_transactions",
+				Columns: []*schema.Column{TransactionsColumns[4]},
 
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
@@ -131,7 +139,8 @@ var (
 
 func init() {
 	SessionsTable.ForeignKeys[0].RefTable = UsersTable
-	TransactionsTable.ForeignKeys[0].RefTable = UsersTable
+	TransactionsTable.ForeignKeys[0].RefTable = AccountsTable
+	TransactionsTable.ForeignKeys[1].RefTable = UsersTable
 	AccountUsersTable.ForeignKeys[0].RefTable = AccountsTable
 	AccountUsersTable.ForeignKeys[1].RefTable = UsersTable
 }
