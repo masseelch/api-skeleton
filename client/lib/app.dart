@@ -1,6 +1,3 @@
-import 'package:client/screens/login.dart';
-import 'package:client/screens/splash.dart';
-import 'package:client/services/token.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -8,6 +5,10 @@ import 'package:provider/provider.dart';
 
 import 'config.dart';
 import 'generated/repository/provider.dart';
+import 'screens/home.dart';
+import 'screens/login.dart';
+import 'screens/splash.dart';
+import 'services/token.dart';
 import 'utils/dio.dart';
 
 class App extends StatefulWidget {
@@ -61,11 +62,19 @@ class _AppState extends State<App> {
           title: 'Flutter Demo',
           theme: ThemeData(
             primarySwatch: Colors.teal,
+            buttonTheme: ButtonThemeData(
+              textTheme: ButtonTextTheme.primary,
+            ),
+            inputDecorationTheme: const InputDecorationTheme(
+              border: const OutlineInputBorder(
+                borderRadius: BorderRadius.zero,
+              ),
+            ),
           ),
           routes: {
             '/': (_) => SplashScreen(logo: logo),
             '/login': (_) => LoginScreen(logo: logo),
-            '/home': (_) => Text('home'),
+            '/home': (_) => HomeScreen(),
           },
         ));
   }

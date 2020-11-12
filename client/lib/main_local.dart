@@ -7,7 +7,7 @@ void main() {
   runApp(const App(
     config: const Config(
       env: Environment.dev,
-      baseUrl: 'https://10.0.2.2:8000',
+      baseUrl: 'http://10.0.2.2:8000',
     ),
   ));
 }

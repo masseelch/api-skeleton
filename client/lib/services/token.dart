@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
   static const _tokenKey = 'api-skeleton-token';
+
   // static const _tokenLifeExpiredAtKey = 'api-skeleton-token-life-expired-at'
 
   Future<String> getToken() async =>
@@ -11,6 +12,9 @@ class TokenService {
 
   Future<bool> setToken(String t) async =>
       (await SharedPreferences.getInstance()).setString(_tokenKey, t);
+
+  Future<bool> deleteToken() async =>
+      (await SharedPreferences.getInstance()).remove(_tokenKey);
 
   static TokenService of(BuildContext context) =>
       Provider.of<TokenService>(context, listen: false);
