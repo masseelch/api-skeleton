@@ -21,8 +21,8 @@ import (
 	"skeleton/ent/user"
 )
 
-// The AccountHandler.
-type AccountHandler struct {
+// Shared handler.
+type handler struct {
 	*chi.Mux
 
 	client    *ent.Client
@@ -30,30 +30,28 @@ type AccountHandler struct {
 	logger    *logrus.Logger
 }
 
+// The AccountHandler.
+type AccountHandler struct {
+	*handler
+}
+
 // Create a new AccountHandler
 func NewAccountHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *AccountHandler {
-	return &AccountHandler{
-		Mux:       chi.NewRouter(),
-		client:    c,
-		validator: v,
-		logger:    log,
+	h := &AccountHandler{
+		&handler{
+			Mux:       chi.NewRouter(),
+			client:    c,
+			validator: v,
+			logger:    log,
+		},
 	}
-}
 
-// Enable all endpoints.
-func (h *AccountHandler) EnableAllEndpoints() *AccountHandler {
-	h.EnableCreateEndpoint()
-	h.EnableReadEndpoint()
-	h.EnableUpdateEndpoint()
-	h.EnableListEndpoint()
-	h.EnableUsersEndpoint()
-	h.EnableTransactionsEndpoint()
-	return h
-}
-
-// Enable the create operation.
-func (h *AccountHandler) EnableCreateEndpoint() *AccountHandler {
 	h.Post("/", h.Create)
+	h.Get("/{id:\\d+}", h.Read)
+	h.Get("/{id:\\d+}", h.Update)
+
+	h.Get("/", h.List)
+
 	return h
 }
 
@@ -113,25 +111,11 @@ func (h AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the read operation.
-func (h *AccountHandler) EnableReadEndpoint() *AccountHandler {
-	h.Get("/{id:\\d+}", h.Read)
-	return h
-}
-
 // This function fetches the Account model identified by a give url-parameter from
 // database and returns it to the client.
 func (h AccountHandler) Read(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -167,12 +151,6 @@ func (h AccountHandler) Read(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the update operation.
-func (h *AccountHandler) EnableUpdateEndpoint() *AccountHandler {
-	h.Get("/{id:\\d+}", h.Update)
-	return h
-}
-
 // struct to bind the post body to.
 type accountUpdateRequest struct {
 	Title        string `json:"title,omitempty" `
@@ -182,17 +160,8 @@ type accountUpdateRequest struct {
 
 // This function updates a given Account model and saves the changes in the database.
 func (h AccountHandler) Update(w http.ResponseWriter, r *http.Request) {
-
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -243,37 +212,14 @@ func (h AccountHandler) Update(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the list operation.
-func (h *AccountHandler) EnableListEndpoint() *AccountHandler {
-	h.Get("/", h.List)
-	return h
-}
-
 // This function queries for Account models. Can be filtered by query parameters.
 func (h AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.Account.Query()
 
 	// Pagination
-	var err error
-	page := 1
-	itemsPerPage := 30
-
-	if d := r.URL.Query().Get("itemsPerPage"); d != "" {
-		itemsPerPage, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("itemsPerPage", d).Info("error parsing query parameter 'itemsPerPage'")
-			render.BadRequest(w, r, "itemsPerPage must be a positive integer greater zero")
-			return
-		}
-	}
-
-	if d := r.URL.Query().Get("page"); d != "" {
-		page, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("page", d).Info("error parsing query parameter 'page'")
-			render.BadRequest(w, r, "page must be a positive integer greater zero")
-			return
-		}
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
 	}
 
 	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
@@ -301,119 +247,28 @@ func (h AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the read operation on the users edge.
-func (h *AccountHandler) EnableUsersEndpoint() *AccountHandler {
-	h.Get("/{id:\\d+}/users", h.Users)
-	return h
-}
-
-func (h AccountHandler) Users(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.Account.Query().Where(account.ID(id)).QueryUsers()
-
-	es, err := qb.All(r.Context())
-	if err != nil {
-		h.logger.WithError(err).Error("error querying database") // todo - better error
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:list"}}, es)
-	if err != nil {
-		h.logger.WithError(err).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("amount", len(es)).Info("user rendered")
-	render.OK(w, r, d)
-
-}
-
-// Enable the read operation on the transactions edge.
-func (h *AccountHandler) EnableTransactionsEndpoint() *AccountHandler {
-	h.Get("/{id:\\d+}/transactions", h.Transactions)
-	return h
-}
-
-func (h AccountHandler) Transactions(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.Account.Query().Where(account.ID(id)).QueryTransactions()
-
-	es, err := qb.All(r.Context())
-	if err != nil {
-		h.logger.WithError(err).Error("error querying database") // todo - better error
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
-	if err != nil {
-		h.logger.WithError(err).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("amount", len(es)).Info("transaction rendered")
-	render.OK(w, r, d)
-
-}
-
 // The TagHandler.
 type TagHandler struct {
-	*chi.Mux
-
-	client    *ent.Client
-	validator *validator.Validate
-	logger    *logrus.Logger
+	*handler
 }
 
 // Create a new TagHandler
 func NewTagHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *TagHandler {
-	return &TagHandler{
-		Mux:       chi.NewRouter(),
-		client:    c,
-		validator: v,
-		logger:    log,
+	h := &TagHandler{
+		&handler{
+			Mux:       chi.NewRouter(),
+			client:    c,
+			validator: v,
+			logger:    log,
+		},
 	}
-}
 
-// Enable all endpoints.
-func (h *TagHandler) EnableAllEndpoints() *TagHandler {
-	h.EnableCreateEndpoint()
-	h.EnableReadEndpoint()
-	h.EnableUpdateEndpoint()
-	h.EnableListEndpoint()
-	return h
-}
-
-// Enable the create operation.
-func (h *TagHandler) EnableCreateEndpoint() *TagHandler {
 	h.Post("/", h.Create)
+	h.Get("/{id:\\d+}", h.Read)
+	h.Get("/{id:\\d+}", h.Update)
+
+	h.Get("/", h.List)
+
 	return h
 }
 
@@ -471,25 +326,11 @@ func (h TagHandler) Create(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the read operation.
-func (h *TagHandler) EnableReadEndpoint() *TagHandler {
-	h.Get("/{id:\\d+}", h.Read)
-	return h
-}
-
 // This function fetches the Tag model identified by a give url-parameter from
 // database and returns it to the client.
 func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -525,12 +366,6 @@ func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the update operation.
-func (h *TagHandler) EnableUpdateEndpoint() *TagHandler {
-	h.Get("/{id:\\d+}", h.Update)
-	return h
-}
-
 // struct to bind the post body to.
 type tagUpdateRequest struct {
 	Title       string `json:"title,omitempty" `
@@ -539,17 +374,8 @@ type tagUpdateRequest struct {
 
 // This function updates a given Tag model and saves the changes in the database.
 func (h TagHandler) Update(w http.ResponseWriter, r *http.Request) {
-
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -599,37 +425,14 @@ func (h TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the list operation.
-func (h *TagHandler) EnableListEndpoint() *TagHandler {
-	h.Get("/", h.List)
-	return h
-}
-
 // This function queries for Tag models. Can be filtered by query parameters.
 func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.Tag.Query()
 
 	// Pagination
-	var err error
-	page := 1
-	itemsPerPage := 30
-
-	if d := r.URL.Query().Get("itemsPerPage"); d != "" {
-		itemsPerPage, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("itemsPerPage", d).Info("error parsing query parameter 'itemsPerPage'")
-			render.BadRequest(w, r, "itemsPerPage must be a positive integer greater zero")
-			return
-		}
-	}
-
-	if d := r.URL.Query().Get("page"); d != "" {
-		page, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("page", d).Info("error parsing query parameter 'page'")
-			render.BadRequest(w, r, "page must be a positive integer greater zero")
-			return
-		}
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
 	}
 
 	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
@@ -663,37 +466,26 @@ func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 
 // The TransactionHandler.
 type TransactionHandler struct {
-	*chi.Mux
-
-	client    *ent.Client
-	validator *validator.Validate
-	logger    *logrus.Logger
+	*handler
 }
 
 // Create a new TransactionHandler
 func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *TransactionHandler {
-	return &TransactionHandler{
-		Mux:       chi.NewRouter(),
-		client:    c,
-		validator: v,
-		logger:    log,
+	h := &TransactionHandler{
+		&handler{
+			Mux:       chi.NewRouter(),
+			client:    c,
+			validator: v,
+			logger:    log,
+		},
 	}
-}
 
-// Enable all endpoints.
-func (h *TransactionHandler) EnableAllEndpoints() *TransactionHandler {
-	h.EnableCreateEndpoint()
-	h.EnableReadEndpoint()
-	h.EnableUpdateEndpoint()
-	h.EnableListEndpoint()
-	h.EnableUserEndpoint()
-	h.EnableAccountEndpoint()
-	return h
-}
-
-// Enable the create operation.
-func (h *TransactionHandler) EnableCreateEndpoint() *TransactionHandler {
 	h.Post("/", h.Create)
+	h.Get("/{id:\\d+}", h.Read)
+	h.Get("/{id:\\d+}", h.Update)
+
+	h.Get("/", h.List)
+
 	return h
 }
 
@@ -755,25 +547,11 @@ func (h TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the read operation.
-func (h *TransactionHandler) EnableReadEndpoint() *TransactionHandler {
-	h.Get("/{id:\\d+}", h.Read)
-	return h
-}
-
 // This function fetches the Transaction model identified by a give url-parameter from
 // database and returns it to the client.
 func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -809,12 +587,6 @@ func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the update operation.
-func (h *TransactionHandler) EnableUpdateEndpoint() *TransactionHandler {
-	h.Get("/{id:\\d+}", h.Update)
-	return h
-}
-
 // struct to bind the post body to.
 type transactionUpdateRequest struct {
 	Date    time.Time `json:"date,omitempty" `
@@ -825,17 +597,8 @@ type transactionUpdateRequest struct {
 
 // This function updates a given Transaction model and saves the changes in the database.
 func (h TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
-
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -887,37 +650,14 @@ func (h TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the list operation.
-func (h *TransactionHandler) EnableListEndpoint() *TransactionHandler {
-	h.Get("/", h.List)
-	return h
-}
-
 // This function queries for Transaction models. Can be filtered by query parameters.
 func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.Transaction.Query()
 
 	// Pagination
-	var err error
-	page := 1
-	itemsPerPage := 30
-
-	if d := r.URL.Query().Get("itemsPerPage"); d != "" {
-		itemsPerPage, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("itemsPerPage", d).Info("error parsing query parameter 'itemsPerPage'")
-			render.BadRequest(w, r, "itemsPerPage must be a positive integer greater zero")
-			return
-		}
-	}
-
-	if d := r.URL.Query().Get("page"); d != "" {
-		page, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("page", d).Info("error parsing query parameter 'page'")
-			render.BadRequest(w, r, "page must be a positive integer greater zero")
-			return
-		}
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
 	}
 
 	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
@@ -955,146 +695,28 @@ func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the read operation on the user edge.
-func (h *TransactionHandler) EnableUserEndpoint() *TransactionHandler {
-	h.Get("/{id:\\d+}/user", h.User)
-	return h
-}
-
-func (h TransactionHandler) User(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryUser()
-
-	e, err := qb.Only(r.Context())
-
-	if err != nil {
-		switch err.(type) {
-		case *ent.NotFoundError:
-			h.logger.WithError(err).WithField("User.id", id).Debug("job not found")
-			render.NotFound(w, r, err)
-			return
-		case *ent.NotSingularError:
-			h.logger.WithError(err).WithField("User.id", id).Error("duplicate entry for id")
-			render.InternalServerError(w, r, nil)
-			return
-		default:
-			h.logger.WithError(err).WithField("User.id", id).Error("error fetching node from db")
-			render.InternalServerError(w, r, nil)
-			return
-		}
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:read"}}, e)
-	if err != nil {
-		h.logger.WithError(err).WithField("User.id", id).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("user", e.ID).Info("user rendered")
-	render.OK(w, r, d)
-
-}
-
-// Enable the read operation on the account edge.
-func (h *TransactionHandler) EnableAccountEndpoint() *TransactionHandler {
-	h.Get("/{id:\\d+}/account", h.Account)
-	return h
-}
-
-func (h TransactionHandler) Account(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryAccount()
-
-	e, err := qb.Only(r.Context())
-
-	if err != nil {
-		switch err.(type) {
-		case *ent.NotFoundError:
-			h.logger.WithError(err).WithField("Account.id", id).Debug("job not found")
-			render.NotFound(w, r, err)
-			return
-		case *ent.NotSingularError:
-			h.logger.WithError(err).WithField("Account.id", id).Error("duplicate entry for id")
-			render.InternalServerError(w, r, nil)
-			return
-		default:
-			h.logger.WithError(err).WithField("Account.id", id).Error("error fetching node from db")
-			render.InternalServerError(w, r, nil)
-			return
-		}
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:read"}}, e)
-	if err != nil {
-		h.logger.WithError(err).WithField("Account.id", id).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("account", e.ID).Info("account rendered")
-	render.OK(w, r, d)
-
-}
-
 // The UserHandler.
 type UserHandler struct {
-	*chi.Mux
-
-	client    *ent.Client
-	validator *validator.Validate
-	logger    *logrus.Logger
+	*handler
 }
 
 // Create a new UserHandler
 func NewUserHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *UserHandler {
-	return &UserHandler{
-		Mux:       chi.NewRouter(),
-		client:    c,
-		validator: v,
-		logger:    log,
+	h := &UserHandler{
+		&handler{
+			Mux:       chi.NewRouter(),
+			client:    c,
+			validator: v,
+			logger:    log,
+		},
 	}
-}
 
-// Enable all endpoints.
-func (h *UserHandler) EnableAllEndpoints() *UserHandler {
-	h.EnableCreateEndpoint()
-	h.EnableReadEndpoint()
-	h.EnableUpdateEndpoint()
-	h.EnableListEndpoint()
-	h.EnableSessionsEndpoint()
-	h.EnableAccountsEndpoint()
-	h.EnableTransactionsEndpoint()
-	return h
-}
-
-// Enable the create operation.
-func (h *UserHandler) EnableCreateEndpoint() *UserHandler {
 	h.Post("/", h.Create)
+	h.Get("/{id:\\d+}", h.Read)
+	h.Get("/{id:\\d+}", h.Update)
+
+	h.Get("/", h.List)
+
 	return h
 }
 
@@ -1154,25 +776,11 @@ func (h UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the read operation.
-func (h *UserHandler) EnableReadEndpoint() *UserHandler {
-	h.Get("/{id:\\d+}", h.Read)
-	return h
-}
-
 // This function fetches the User model identified by a give url-parameter from
 // database and returns it to the client.
 func (h UserHandler) Read(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -1208,12 +816,6 @@ func (h UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the update operation.
-func (h *UserHandler) EnableUpdateEndpoint() *UserHandler {
-	h.Get("/{id:\\d+}", h.Update)
-	return h
-}
-
 // struct to bind the post body to.
 type userUpdateRequest struct {
 	Email    string `json:"email,omitempty" `
@@ -1223,17 +825,8 @@ type userUpdateRequest struct {
 
 // This function updates a given User model and saves the changes in the database.
 func (h UserHandler) Update(w http.ResponseWriter, r *http.Request) {
-
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
+	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
 		return
 	}
 
@@ -1284,37 +877,14 @@ func (h UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, j)
 }
 
-// Enable the list operation.
-func (h *UserHandler) EnableListEndpoint() *UserHandler {
-	h.Get("/", h.List)
-	return h
-}
-
 // This function queries for User models. Can be filtered by query parameters.
 func (h UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.User.Query()
 
 	// Pagination
-	var err error
-	page := 1
-	itemsPerPage := 30
-
-	if d := r.URL.Query().Get("itemsPerPage"); d != "" {
-		itemsPerPage, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("itemsPerPage", d).Info("error parsing query parameter 'itemsPerPage'")
-			render.BadRequest(w, r, "itemsPerPage must be a positive integer greater zero")
-			return
-		}
-	}
-
-	if d := r.URL.Query().Get("page"); d != "" {
-		page, err = strconv.Atoi(d)
-		if err != nil {
-			h.logger.WithField("page", d).Info("error parsing query parameter 'page'")
-			render.BadRequest(w, r, "page must be a positive integer greater zero")
-			return
-		}
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
 	}
 
 	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
@@ -1360,125 +930,45 @@ func (h UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
-// Enable the read operation on the sessions edge.
-func (h *UserHandler) EnableSessionsEndpoint() *UserHandler {
-	h.Get("/{id:\\d+}/sessions", h.Sessions)
-	return h
+func (h handler) urlParamInt(w http.ResponseWriter, r *http.Request, param string) (id int, err error) {
+	p := chi.URLParam(r, param)
+	if p == "" {
+		h.logger.WithField("param", param).Info("empty url param")
+		render.BadRequest(w, r, p+" cannot be ''")
+		return
+	}
+
+	id, err = strconv.Atoi(p)
+	if err != nil {
+		h.logger.WithField(param, p).Info("error parsing url parameter")
+		render.BadRequest(w, r, param+" must be a positive integer greater zero")
+		return
+	}
+
+	return
 }
 
-func (h UserHandler) Sessions(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
+func (h handler) paginationInfo(w http.ResponseWriter, r *http.Request) (page int, itemsPerPage int, err error) {
+	page = 1
+	itemsPerPage = 30
 
-	qb := h.client.User.Query().Where(user.ID(id)).QuerySessions()
-
-	es, err := qb.All(r.Context())
-	if err != nil {
-		h.logger.WithError(err).Error("error querying database") // todo - better error
-		render.InternalServerError(w, r, nil)
-		return
+	if d := r.URL.Query().Get("itemsPerPage"); d != "" {
+		itemsPerPage, err = strconv.Atoi(d)
+		if err != nil {
+			h.logger.WithField("itemsPerPage", d).Info("error parsing query parameter 'itemsPerPage'")
+			render.BadRequest(w, r, "itemsPerPage must be a positive integer greater zero")
+			return
+		}
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"session:list"}}, es)
-	if err != nil {
-		h.logger.WithError(err).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
+	if d := r.URL.Query().Get("page"); d != "" {
+		page, err = strconv.Atoi(d)
+		if err != nil {
+			h.logger.WithField("page", d).Info("error parsing query parameter 'page'")
+			render.BadRequest(w, r, "page must be a positive integer greater zero")
+			return
+		}
 	}
 
-	h.logger.WithField("amount", len(es)).Info("session rendered")
-	render.OK(w, r, d)
-
-}
-
-// Enable the read operation on the accounts edge.
-func (h *UserHandler) EnableAccountsEndpoint() *UserHandler {
-	h.Get("/{id:\\d+}/accounts", h.Accounts)
-	return h
-}
-
-func (h UserHandler) Accounts(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.User.Query().Where(user.ID(id)).QueryAccounts()
-
-	es, err := qb.All(r.Context())
-	if err != nil {
-		h.logger.WithError(err).Error("error querying database") // todo - better error
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:list"}}, es)
-	if err != nil {
-		h.logger.WithError(err).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("amount", len(es)).Info("account rendered")
-	render.OK(w, r, d)
-
-}
-
-// Enable the read operation on the transactions edge.
-func (h *UserHandler) EnableTransactionsEndpoint() *UserHandler {
-	h.Get("/{id:\\d+}/transactions", h.Transactions)
-	return h
-}
-
-func (h UserHandler) Transactions(w http.ResponseWriter, r *http.Request) {
-	idp := chi.URLParam(r, "id")
-	if idp == "" {
-		h.logger.WithField("id", idp).Info("empty 'id' url param")
-		render.BadRequest(w, r, "id cannot be ''")
-		return
-	}
-	id, err := strconv.Atoi(idp)
-	if err != nil {
-		h.logger.WithField("id", idp).Info("error parsing url parameter 'id'")
-		render.BadRequest(w, r, "id must be a positive integer greater zero")
-		return
-	}
-
-	qb := h.client.User.Query().Where(user.ID(id)).QueryTransactions()
-
-	es, err := qb.All(r.Context())
-	if err != nil {
-		h.logger.WithError(err).Error("error querying database") // todo - better error
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
-	if err != nil {
-		h.logger.WithError(err).Error("serialization error")
-		render.InternalServerError(w, r, nil)
-		return
-	}
-
-	h.logger.WithField("amount", len(es)).Info("transaction rendered")
-	render.OK(w, r, d)
-
+	return
 }

@@ -102,3 +102,11 @@ func LoginHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) http
 		render.OK(w, r, d)
 	}
 }
+
+func CheckHandler(c *ent.Client, log *logrus.Logger) http.HandlerFunc {
+	// If the token is still valid the middleware will pass the request on to the callback function,
+	// which will return a 204. Otherwise the middleware itself will return a 401.
+	return Middleware(c, log)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		render.NoContent(w, r)
+	})).ServeHTTP
+}

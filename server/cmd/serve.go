@@ -54,16 +54,17 @@ var serveCmd = &cobra.Command{
 
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/token", auth.LoginHandler(c, v, l))
+			r.Get("/check", auth.CheckHandler(c, l))
 		})
 
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware(c, l))
 
-			r.Mount("/users", handler.NewUserHandler(c, v, l).EnableAllEndpoints())
+			r.Mount("/users", handler.NewUserHandler(c, v, l))
 
 			// Accounts
-			accountHandler := handler.NewAccountHandler(c, v, l).EnableAllEndpoints()
-			accountHandler.Get("/{id:\\d+}/meta", accountHandler.Meta)
+			accountHandler := handler.NewAccountHandler(c, v, l)
+			accountHandler.Get("/meta", accountHandler.Meta)
 			r.Mount("/accounts", accountHandler)
 		})
 

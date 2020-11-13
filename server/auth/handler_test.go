@@ -13,6 +13,25 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestLoginCheckHandler(t *testing.T) {
+	c, _, l, _ := setup(t)
+	defer c.Close()
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest(http.MethodPost, "/", nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	// valid token
+	req.Header.Set("Authorization", validToken)
+	CheckHandler(c, l)(rec, req)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+
+	// invalid token
+	req.Header.Set("Authorization", invalidToken)
+	CheckHandler(c, l)(rec, req)
+	assert.Equal(t, http.StatusNoContent, rec.Code)
+}
+
 func TestLoginHandler(t *testing.T) {
 	c, v, l, h := setup(t)
 	defer c.Close()

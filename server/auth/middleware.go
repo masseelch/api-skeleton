@@ -83,6 +83,10 @@ func SessionFromContext(ctx context.Context) *ent.Session {
 	return ctx.Value(sessionCtx).(*ent.Session)
 }
 
+func UserFromContext(ctx context.Context) *ent.User {
+	return SessionFromContext(ctx).Edges.User
+}
+
 func getTokenFromRequest(r *http.Request) token.Token {
 	// Try to get token from header.
 	t := r.Header.Get("Authorization")

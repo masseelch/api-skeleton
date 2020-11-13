@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/liip/sheriff"
 	"github.com/masseelch/render"
 	"net/http"
@@ -15,13 +13,12 @@ import (
 
 func (h AccountHandler) Meta(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	s := auth.SessionFromContext(ctx)
+	u := auth.UserFromContext(ctx)
 
 	as, err := h.client.Account.Query().
 		Where(
 			account.HasUsersWith(
-				user.ID(s.Edges.User.ID),
+				user.ID(u.ID),
 			),
 		).
 		WithTransactions(func(q *ent.TransactionQuery) {
@@ -34,9 +31,6 @@ func (h AccountHandler) Meta(w http.ResponseWriter, r *http.Request) {
 		render.InternalServerError(w, r, nil)
 		return
 	}
-
-	asdasd, _ := json.MarshalIndent(as, "", "  ")
-	fmt.Println(string(asdasd))
 
 	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:list", "transaction:list", "user:list"}}, as)
 	if err != nil {
