@@ -1,13 +1,17 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/user.dart';
 import '../model/session.dart';
+import '../client/session.dart';
 import '../model/account.dart';
+import '../client/account.dart';
 import '../model/transaction.dart';
+import '../client/transaction.dart';
+
+const userUrl = 'users';
 
 class UserClient {
   UserClient({@required this.dio}) : assert(dio != null);
@@ -15,7 +19,7 @@ class UserClient {
   final Dio dio;
 
   Future<User> find(int id) async {
-    final r = await dio.get('/users/$id');
+    final r = await dio.get('/$userUrl/$id');
     return User.fromJson(r.data);
   }
 
@@ -48,7 +52,7 @@ class UserClient {
       params['enabled'] = enabled;
     }
 
-    final r = await dio.get('/users');
+    final r = await dio.get('/$userUrl');
 
     if (r.data == null) {
       return [];
@@ -58,27 +62,27 @@ class UserClient {
   }
 
   Future<User> create(User e) async {
-    final r = await dio.post('/users', data: e.toJson());
+    final r = await dio.post('/$userUrl', data: e.toJson());
     return (User.fromJson(r.data));
   }
 
   Future<User> update(User e) async {
-    final r = await dio.patch('/users', data: e.toJson());
+    final r = await dio.patch('/$userUrl', data: e.toJson());
     return (User.fromJson(r.data));
   }
 
   Future<List<Session>> sessions(User e) async {
-    final r = await dio.get('/users/${e.id}/sessions');
+    final r = await dio.get('/$userUrl/${e.id}/$sessionUrl');
     return (r.data as List).map((i) => Session.fromJson(i)).toList();
   }
 
   Future<List<Account>> accounts(User e) async {
-    final r = await dio.get('/users/${e.id}/accounts');
+    final r = await dio.get('/$userUrl/${e.id}/$accountUrl');
     return (r.data as List).map((i) => Account.fromJson(i)).toList();
   }
 
   Future<List<Transaction>> transactions(User e) async {
-    final r = await dio.get('/users/${e.id}/transactions');
+    final r = await dio.get('/$userUrl/${e.id}/$transactionUrl');
     return (r.data as List).map((i) => Transaction.fromJson(i)).toList();
   }
 

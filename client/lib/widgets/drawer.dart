@@ -61,8 +61,8 @@ class DashboardDrawerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DrawerListTile(
       iconData: Icons.apps,
-      title: 'Dashboard', //AppLocalizations.of(context).storagesTitle,
-      url: '/home',
+      title: 'Kostenstellen', //AppLocalizations.of(context).storagesTitle,
+      url: '/dashboard',
     );
   }
 }

@@ -1,11 +1,13 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/session.dart';
 import '../model/user.dart';
+import '../client/user.dart';
+
+const sessionUrl = 'sessions';
 
 class SessionClient {
   SessionClient({@required this.dio}) : assert(dio != null);
@@ -13,7 +15,7 @@ class SessionClient {
   final Dio dio;
 
   Future<Session> find(String id) async {
-    final r = await dio.get('/sessions/$id');
+    final r = await dio.get('/$sessionUrl/$id');
     return Session.fromJson(r.data);
   }
 
@@ -41,7 +43,7 @@ class SessionClient {
       params['lifeTimeExpiredAt'] = lifeTimeExpiredAt;
     }
 
-    final r = await dio.get('/sessions');
+    final r = await dio.get('/$sessionUrl');
 
     if (r.data == null) {
       return [];
@@ -51,17 +53,17 @@ class SessionClient {
   }
 
   Future<Session> create(Session e) async {
-    final r = await dio.post('/sessions', data: e.toJson());
+    final r = await dio.post('/$sessionUrl', data: e.toJson());
     return (Session.fromJson(r.data));
   }
 
   Future<Session> update(Session e) async {
-    final r = await dio.patch('/sessions', data: e.toJson());
+    final r = await dio.patch('/$sessionUrl', data: e.toJson());
     return (Session.fromJson(r.data));
   }
 
   Future<User> user(Session e) async {
-    final r = await dio.get('/sessions/${e.id}/user');
+    final r = await dio.get('/$sessionUrl/${e.id}/$userUrl');
     return (User.fromJson(r.data));
   }
 

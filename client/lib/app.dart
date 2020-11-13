@@ -25,6 +25,9 @@ class _AppState extends State<App> {
   final _tokenService = TokenService();
   GlobalObjectKey<NavigatorState> _navigatorKey;
   Dio _dio;
+  
+  // Pre-cache logo.
+  final _logo = SvgPicture.asset('images/logo.svg', width: 200);
 
   @override
   void initState() {
@@ -32,14 +35,37 @@ class _AppState extends State<App> {
 
     _navigatorKey = GlobalObjectKey<NavigatorState>(this);
 
-    _initDio();
+    _dio = newDio(widget.config);
+    _addAuthorizationInterceptor();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _tokenService.getToken().then((t) {
-        _navigatorKey.currentState
-            .pushReplacementNamed(t == null ? '/login' : '/dashboard');
-      }); // todo - check if token is still valid before redirect to home?
+        if (t != null) {
+          _dio.get('/auth/check').then((_) {
+            _addErrorsInterceptor();
+            _navigatorKey.currentState.pushReplacementNamed('/dashboard');
+          }).catchError((e) {
+            if (e is DioError) {
+              if (e.response?.statusCode == 401) {
+                _navigatorKey.currentState.pushReplacementNamed('/login');
+              } else {
+                // todo - handle this case
+              }
+            } else {
+              // todo - handle this case
+            }
+          });
+        } else {
+          _navigatorKey.currentState.pushReplacementNamed('/login');
+        }
+      });
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precachePicture(_logo.pictureProvider, context);
   }
 
   @override
@@ -50,8 +76,6 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    final logo = SvgPicture.asset('images/logo.svg', width: 200);
-
     return MultiProvider(
         providers: [
           ClientProvider(dio: _dio),
@@ -73,25 +97,24 @@ class _AppState extends State<App> {
             ),
           ),
           routes: {
-            '/': (_) => SplashScreen(logo: logo),
-            '/login': (_) => LoginScreen(logo: logo),
+            '/': (_) => SplashScreen(logo: _logo),
+            '/login': (_) => LoginScreen(logo: _logo),
             '/dashboard': (_) => DashboardScreen(),
           },
         ));
   }
 
-  void _initDio() {
-    _dio = newDio(widget.config);
-
-    // Add authentication token.
+  void _addAuthorizationInterceptor() {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options) async {
         options.headers['Authorization'] = await _tokenService.getToken();
         return options;
       },
     ));
+  }
 
-    // Handle some errors early.
+  // Handle some errors early.
+  void _addErrorsInterceptor() {
     _dio.interceptors.add(InterceptorsWrapper(
       onError: (e) async {
         switch (e.type) {

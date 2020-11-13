@@ -1,10 +1,11 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/tag.dart';
+
+const tagUrl = 'tags';
 
 class TagClient {
   TagClient({@required this.dio}) : assert(dio != null);
@@ -12,7 +13,7 @@ class TagClient {
   final Dio dio;
 
   Future<Tag> find(int id) async {
-    final r = await dio.get('/tags/$id');
+    final r = await dio.get('/$tagUrl/$id');
     return Tag.fromJson(r.data);
   }
 
@@ -40,7 +41,7 @@ class TagClient {
       params['description'] = description;
     }
 
-    final r = await dio.get('/tags');
+    final r = await dio.get('/$tagUrl');
 
     if (r.data == null) {
       return [];
@@ -50,12 +51,12 @@ class TagClient {
   }
 
   Future<Tag> create(Tag e) async {
-    final r = await dio.post('/tags', data: e.toJson());
+    final r = await dio.post('/$tagUrl', data: e.toJson());
     return (Tag.fromJson(r.data));
   }
 
   Future<Tag> update(Tag e) async {
-    final r = await dio.patch('/tags', data: e.toJson());
+    final r = await dio.patch('/$tagUrl', data: e.toJson());
     return (Tag.fromJson(r.data));
   }
 

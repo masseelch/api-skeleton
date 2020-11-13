@@ -28,9 +28,6 @@ class ClientProvider extends SingleChildStatelessWidget {
         Provider<AccountClient>(
           create: (_) => AccountClient(dio: dio),
         ),
-        Provider<SessionClient>(
-          create: (_) => SessionClient(dio: dio),
-        ),
         Provider<TagClient>(
           create: (_) => TagClient(dio: dio),
         ),

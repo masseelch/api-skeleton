@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../generated/client/user.dart';
+import '../generated/client/account.dart';
 import '../generated/model/account.dart';
 import '../services/token.dart';
 import '../widgets/drawer.dart';
 import '../widgets/progress_indicators.dart';
+import '../client/extensions.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -20,7 +21,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     TokenService.of(context).getUser().then((user) {
       setState(() {
-        _accounts$ = UserClient.of(context).accounts(user);
+        _accounts$ = AccountClient.of(context).meta();
       });
     });
   }
