@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:provider/provider.dart';
 
@@ -25,7 +26,7 @@ class _AppState extends State<App> {
   final _tokenService = TokenService();
   GlobalObjectKey<NavigatorState> _navigatorKey;
   Dio _dio;
-  
+
   // Pre-cache logo.
   final _logo = SvgPicture.asset('images/logo.svg', width: 200);
 
@@ -47,6 +48,7 @@ class _AppState extends State<App> {
           }).catchError((e) {
             if (e is DioError) {
               if (e.response?.statusCode == 401) {
+                // todo - remove token
                 _navigatorKey.currentState.pushReplacementNamed('/login');
               } else {
                 // todo - handle this case
@@ -84,9 +86,11 @@ class _AppState extends State<App> {
         ],
         child: MaterialApp(
           navigatorKey: _navigatorKey,
-          title: 'Flutter Demo',
+          title: 'Title',
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           theme: ThemeData(
             primarySwatch: Colors.teal,
+            accentColor: Colors.pinkAccent,
             buttonTheme: ButtonThemeData(
               textTheme: ButtonTextTheme.primary,
             ),
@@ -96,6 +100,8 @@ class _AppState extends State<App> {
               ),
             ),
           ),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           routes: {
             '/': (_) => SplashScreen(logo: _logo),
             '/login': (_) => LoginScreen(logo: _logo),
@@ -132,7 +138,8 @@ class _AppState extends State<App> {
                 await showFeedbackDialog(
                   _navigatorKey.currentState.overlay.context,
                   title: 'Sitzung abgelaufen', //t.apiError401Title,
-                  content: 'Die aktuelle Sitzung is abgelaufen. Bitte logge dich erneut ein.', // t.apiError401Content,
+                  content:
+                      'Die aktuelle Sitzung is abgelaufen. Bitte logge dich erneut ein.', // t.apiError401Content,
                 );
 
                 if (await _tokenService.logout()) {

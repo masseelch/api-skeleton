@@ -4,12 +4,12 @@ go 1.15
 
 require (
 	github.com/Pallinder/go-randomdata v1.2.0
-	github.com/davecgh/go-spew v1.1.1
 	github.com/facebook/ent v0.5.1-0.20201108092644-762df65f11e8
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
+	github.com/jinzhu/now v1.1.1
 	github.com/liip/sheriff v0.9.0
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/masseelch/elk v0.0.0-20201111111205-9d4695d69de7

@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 
+import '../client/extensions.dart';
 import '../generated/client/account.dart';
 import '../generated/model/account.dart';
 import '../services/token.dart';
+import '../utils/date_extensions.dart';
+import '../utils/num_extensions.dart';
 import '../widgets/drawer.dart';
+import '../widgets/list_header.dart';
 import '../widgets/progress_indicators.dart';
-import '../client/extensions.dart';
+import 'transactions.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -21,15 +27,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     TokenService.of(context).getUser().then((user) {
       setState(() {
-        _accounts$ = AccountClient.of(context).meta();
+        final now = DateTime.now();
+        _accounts$ = AccountClient.of(context).meta(
+          user,
+          from: now.startOfMonth(),
+          to: now.endOfMonth(),
+        );
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     final drawer = const AppDrawer();
-    final appBar = AppBar(title: const Text('Kostenstellen'));
+    final appBar = AppBar(title: Text(t.screenDashboardTitle));
 
     if (_accounts$ == null) {
       return Scaffold(
@@ -39,15 +53,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
+    final dateFormat = DateFormat.MMMM(t.localeName);
+
     return Scaffold(
       drawer: drawer,
       appBar: appBar,
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () {
-          // do stuff
-        },
-      ),
       body: FutureBuilder<List<Account>>(
         future: _accounts$,
         builder: (context, snapshot) {
@@ -60,17 +70,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // todo - handle error
           }
 
-          return ListView.separated(
-            itemCount: snapshot.data.length,
-            separatorBuilder: (context, index) => const Divider(),
-            itemBuilder: (context, index) {
-              final acc = snapshot.data[index];
+          final children = <Widget>[
+            ListHeader(t.screenDashboardListHeader(
+              dateFormat.format(DateTime.now()),
+            )),
+          ];
+
+          children.addAll(ListTile.divideTiles(
+            context: context,
+            tiles: snapshot.data.map((acc) {
+              final expenses = acc.edges.transactions.fold<int>(
+                0,
+                (previousValue, element) => previousValue + element.amount,
+              );
 
               return ListTile(
                 title: Text(acc.title),
+                subtitle: Text(
+                  expenses.toMoneyDisplay(),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle().copyWith(
+                    color: theme.accentColor,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => TransactionsScreen(account: acc),
+                  ));
+                },
               );
-            },
-          );
+            }),
+          ));
+
+          return ListView(children: children);
         },
       ),
     );

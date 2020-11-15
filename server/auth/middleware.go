@@ -17,9 +17,6 @@ const (
 )
 
 var (
-	SessionIdleTime = 15 * time.Minute
-	SessionLifeTime = 24 * time.Hour
-
 	errExpiredToken = "Token Expired"
 	errInvalidToken = "Invalid Token"
 	errMissingToken = "Missing Token"

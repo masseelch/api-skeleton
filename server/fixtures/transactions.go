@@ -9,7 +9,7 @@ import (
 	"github.com/Pallinder/go-randomdata"
 )
 
-const transactionCount = 25
+const transactionCount = 500
 
 func (r refs) transaction() *ent.Transaction {
 	m := r[transactionKey].([]*ent.Transaction)
@@ -26,7 +26,7 @@ func transactions(refs refs, c *ent.Client) error {
 
 		b[i] = c.Transaction.Create().
 			SetDate(t).
-			SetAmount(randomdata.Number(1,50000)).
+			SetAmount(randomdata.Number(-100*10, -1)).
 			SetAccount(refs.account()).
 			SetUser(refs.user())
 	}

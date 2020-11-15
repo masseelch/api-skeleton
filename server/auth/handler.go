@@ -15,6 +15,9 @@ import (
 )
 
 var (
+	SessionIdleTime = 15 * time.Minute
+	SessionLifeTime = 24 * time.Hour
+
 	errBadCredentials   = "Bad Credentials"
 	errMalformedRequest = "Malformed Request"
 	errUserBlocked      = "User Blocked"

@@ -23,6 +23,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+   sdk: flutter
+  intl: 0.16.1
   flutter_svg: ^0.19.1
   dio: ^3.0.10
   dio_flutter_transformer: ^3.0.2
@@ -37,6 +40,7 @@ dev_dependencies:
   json_serializable: ^3.5.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - images/logo.svg

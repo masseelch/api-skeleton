@@ -1,0 +1,69 @@
+{
+  "@@locale": "de",
+  "appTitle": "Money",
+  "@appTitle": {
+    "description": "The app title"
+  },
+  "appActionOK": "OK",
+  "@appActionOK": {
+    "description": "Default label of an OK action"
+  },
+  "dialogFeedbackTitle": "Hoppla ...",
+  "@dialogFeedbackTitle": {
+    "description": "Default title of a general feedback dialog"
+  },
+  "dialogFeedbackContent": "Es ist unerwartet ein Fehler aufgetreten. Versuche es später erneut.",
+  "@dialogFeedbackContent": {
+    "description": "Default content of a general feedback dialog"
+  },
+  "dialogLoadingContent": "Bitte warten ...",
+  "@dialogLoadingContent": {
+    "description": "Default text on a loading spinner dialog"
+  },
+  "snackbarErrorContent": "Es ist unerwartet ein Fehler aufgetreten.",
+  "@snackbarErrorContent": {
+    "description": "Default content of a error snackbar"
+  },
+  "screenDashboardTitle": "Kostenstellen",
+  "@screenDashboardTitle": {
+    "description": "Title of the dashboard screen"
+  },
+  "screenDashboardListHeader": "Ausgaben im Monat {month}",
+  "@screenDashboardListHeader": {
+    "description": "Header above the accounts accumulated expenses for the given month",
+    "placeholders": {
+      "month":{
+        "type": "String",
+        "example": "Januar"
+      }
+    }
+  },
+  "screenLoginActionSubmit": "ANMELDEN",
+  "@screenLoginActionSubmit": {
+    "description": "Label of the submit button in the login screen"
+  },
+  "screenLoginLabelEmail": "E-Mail",
+  "@screenLoginLabelEmail": {
+    "description": "Label of the email field in the login screen"
+  },
+  "screenLoginLabelPassword": "Passwort",
+  "@screenLoginLabelPassword": {
+    "description": "Label of the password field in the login screen"
+  },
+  "screenLoginValidationErrorEmail": "Bitte gib eine gültige E-Mail Adresse ein",
+  "@screenLoginValidationErrorEmail": {
+    "description": "Validation error on bad input in email field in the login screen"
+  },
+  "screenLoginValidationErrorPassword": "Dein Password hat mindestens 6 Zeichen",
+  "@screenLoginValidationErrorPassword": {
+    "description": "Validation error on bad input in password field in the login screen"
+  },
+  "screenLoginFeedbackBadCredentials": "Fehlerhafte Zugangsdaten.",
+  "@screenLoginFeedbackBadCredentials": {
+    "description": "Feedback to the user when the user has given bad credentials"
+  },
+  "screenTransactionsTitle": "Ausgaben",
+  "@screenTransactionsTitle": {
+    "description": "Title of the transactions screen"
+  }
+}

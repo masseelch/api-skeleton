@@ -52,6 +52,9 @@ func NewAccountHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger)
 
 	h.Get("/", h.List)
 
+	h.Get("/{id:\\d+}/users", h.Users)
+	h.Get("/{id:\\d+}/transactions", h.Transactions)
+
 	return h
 }
 
@@ -245,6 +248,58 @@ func (h AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.WithField("amount", len(es)).Info("account rendered")
 	render.OK(w, r, d)
+}
+
+func (h AccountHandler) Users(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.Account.Query().Where(account.ID(id)).QueryUsers()
+
+	es, err := qb.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("user rendered")
+	render.OK(w, r, d)
+
+}
+
+func (h AccountHandler) Transactions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.Account.Query().Where(account.ID(id)).QueryTransactions()
+
+	es, err := qb.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("transaction rendered")
+	render.OK(w, r, d)
+
 }
 
 // The TagHandler.
@@ -486,6 +541,9 @@ func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Log
 
 	h.Get("/", h.List)
 
+	h.Get("/{id:\\d+}/user", h.User)
+	h.Get("/{id:\\d+}/account", h.Account)
+
 	return h
 }
 
@@ -695,6 +753,82 @@ func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
+func (h TransactionHandler) User(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryUser()
+
+	e, err := qb.Only(r.Context())
+
+	if err != nil {
+		switch err.(type) {
+		case *ent.NotFoundError:
+			h.logger.WithError(err).WithField("User.id", id).Debug("job not found")
+			render.NotFound(w, r, err)
+			return
+		case *ent.NotSingularError:
+			h.logger.WithError(err).WithField("User.id", id).Error("duplicate entry for id")
+			render.InternalServerError(w, r, nil)
+			return
+		default:
+			h.logger.WithError(err).WithField("User.id", id).Error("error fetching node from db")
+			render.InternalServerError(w, r, nil)
+			return
+		}
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:read"}}, e)
+	if err != nil {
+		h.logger.WithError(err).WithField("User.id", id).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("user", e.ID).Info("user rendered")
+	render.OK(w, r, d)
+
+}
+
+func (h TransactionHandler) Account(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryAccount()
+
+	e, err := qb.Only(r.Context())
+
+	if err != nil {
+		switch err.(type) {
+		case *ent.NotFoundError:
+			h.logger.WithError(err).WithField("Account.id", id).Debug("job not found")
+			render.NotFound(w, r, err)
+			return
+		case *ent.NotSingularError:
+			h.logger.WithError(err).WithField("Account.id", id).Error("duplicate entry for id")
+			render.InternalServerError(w, r, nil)
+			return
+		default:
+			h.logger.WithError(err).WithField("Account.id", id).Error("error fetching node from db")
+			render.InternalServerError(w, r, nil)
+			return
+		}
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:read"}}, e)
+	if err != nil {
+		h.logger.WithError(err).WithField("Account.id", id).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("account", e.ID).Info("account rendered")
+	render.OK(w, r, d)
+
+}
+
 // The UserHandler.
 type UserHandler struct {
 	*handler
@@ -716,6 +850,10 @@ func NewUserHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *U
 	h.Get("/{id:\\d+}", h.Update)
 
 	h.Get("/", h.List)
+
+	h.Get("/{id:\\d+}/sessions", h.Sessions)
+	h.Get("/{id:\\d+}/accounts", h.Accounts)
+	h.Get("/{id:\\d+}/transactions", h.Transactions)
 
 	return h
 }
@@ -930,11 +1068,89 @@ func (h UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	render.OK(w, r, d)
 }
 
+func (h UserHandler) Sessions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.User.Query().Where(user.ID(id)).QuerySessions()
+
+	es, err := qb.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"session:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("session rendered")
+	render.OK(w, r, d)
+
+}
+
+func (h UserHandler) Accounts(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.User.Query().Where(user.ID(id)).QueryAccounts()
+
+	es, err := qb.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("account rendered")
+	render.OK(w, r, d)
+
+}
+
+func (h UserHandler) Transactions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	qb := h.client.User.Query().Where(user.ID(id)).QueryTransactions()
+
+	es, err := qb.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("transaction rendered")
+	render.OK(w, r, d)
+
+}
+
 func (h handler) urlParamInt(w http.ResponseWriter, r *http.Request, param string) (id int, err error) {
 	p := chi.URLParam(r, param)
 	if p == "" {
 		h.logger.WithField("param", param).Info("empty url param")
-		render.BadRequest(w, r, p+" cannot be ''")
+		render.BadRequest(w, r, param+" cannot be ''")
 		return
 	}
 
@@ -942,6 +1158,24 @@ func (h handler) urlParamInt(w http.ResponseWriter, r *http.Request, param strin
 	if err != nil {
 		h.logger.WithField(param, p).Info("error parsing url parameter")
 		render.BadRequest(w, r, param+" must be a positive integer greater zero")
+		return
+	}
+
+	return
+}
+
+func (h handler) urlParamTime(w http.ResponseWriter, r *http.Request, param string) (date time.Time, err error) {
+	p := chi.URLParam(r, param)
+	if p == "" {
+		h.logger.WithField("param", param).Info("empty url param")
+		render.BadRequest(w, r, param+" cannot be ''")
+		return
+	}
+
+	date, err = time.Parse("2006-01-02", p)
+	if err != nil {
+		h.logger.WithField(param, p).Info("error parsing url parameter")
+		render.BadRequest(w, r, param+" must be a valid date in yyyy-mm-dd format")
 		return
 	}
 

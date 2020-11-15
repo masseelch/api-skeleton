@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'account.dart';
-import 'session.dart';
+
 import 'tag.dart';
+
 import 'transaction.dart';
+
 import 'user.dart';
 
 class ClientProvider extends SingleChildStatelessWidget {

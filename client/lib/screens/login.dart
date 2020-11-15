@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../config.dart';
 import '../dialogs/loading.dart';
@@ -46,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final t = BaseLocalizations.of(context);
+    final t = AppLocalizations.of(context);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -78,10 +79,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           _focusScopeNode.nextFocus();
                         },
                         decoration: InputDecoration(
-                          // labelText: t.loginEmailLabel,
-                          // hintText: t.loginEmailLabel,
-                          labelText: 'E-Mail',
-                          hintText: 'E-Mail',
+                          labelText: t.screenLoginLabelEmail,
+                          hintText: t.screenLoginLabelEmail,
                         ),
                         validator: (v) {
                           if (RegExp(
@@ -90,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           }
 
-                          return 'Dies ist keine gültige E-Mail';
+                          return t.screenLoginValidationErrorEmail;
                         },
                         onSaved: (v) => _email = v,
                       ),
@@ -108,14 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           _submit(context);
                         },
                         decoration: InputDecoration(
-                          // labelText: t.loginPasswordLabel,
-                          // hintText: t.loginPasswordLabel,
-                          labelText: 'Passwort',
-                          hintText: 'Passwort',
+                          labelText: t.screenLoginLabelPassword,
+                          hintText: t.screenLoginLabelPassword,
                         ),
                         validator: (v) {
-                          if (v == null || v.length < 8) {
-                            return 'Das Passwort muss mindestens 8 Zeichen lang sein.';
+                          if (v == null || v.length < 6) {
+                            return t.screenLoginValidationErrorPassword;
                           }
 
                           return null;
@@ -130,8 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       alignment: Alignment.centerRight,
                       child: FlatButton(
-                        child: Text('ANMELDEN'),
-                        // child: Text(t.loginSubmitLabel.toUpperCase()),
+                        child: Text(t.screenLoginActionSubmit),
                         onPressed: () {
                           _submit(context);
                         },
@@ -175,8 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
         showErrorSnackBar(
           context,
           scaffold: _scaffoldKey.currentState,
-          content: 'Falsche Zugangsdaten',
-          // content: BaseLocalizations.of(context).loginWrongCredentials,
+          content: AppLocalizations.of(context).screenLoginFeedbackBadCredentials,
         );
         hideLoadingDialog(context);
       } finally {

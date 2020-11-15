@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 void showLoadingDialog(BuildContext context, [String text]) => showDialog(
-  context: context,
-  builder: (BuildContext context) => WillPopScope(
-    onWillPop: () async => false,
-    child: LoadingDialog(text),
-  ),
-  barrierDismissible: false,
-);
+      context: context,
+      builder: (BuildContext context) => WillPopScope(
+        onWillPop: () async => false,
+        child: LoadingDialog(text),
+      ),
+      barrierDismissible: false,
+    );
 
 void hideLoadingDialog(BuildContext context) =>
     Navigator.of(context, rootNavigator: true).pop();
@@ -27,7 +28,7 @@ class LoadingDialog extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             const CircularProgressIndicator(),
-            Text(text ?? 'Lade ...'), // BaseLocalizations.of(context).feedbackLoadingDialogContent),
+            Text(text ?? AppLocalizations.of(context).dialogLoadingContent),
           ],
         ),
       ),

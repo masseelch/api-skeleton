@@ -22,6 +22,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const dateRegex = "\\d\\d\\d\\d-\\d\\d-\\d\\d"
+
 // migrateCmd represents the migrate command
 var serveCmd = &cobra.Command{
 	Use: "serve",
@@ -60,12 +62,16 @@ var serveCmd = &cobra.Command{
 		r.Group(func(r chi.Router) {
 			r.Use(auth.Middleware(c, l))
 
-			r.Mount("/users", handler.NewUserHandler(c, v, l))
+			// Users and sub-resources.
+			userHandler := handler.NewUserHandler(c, v, l)
+			userHandler.Get("/{id:\\d+}/account-meta/{from}/{to}", userHandler.Meta)
+			r.Mount("/users", userHandler)
 
 			// Accounts
-			accountHandler := handler.NewAccountHandler(c, v, l)
-			accountHandler.Get("/meta", accountHandler.Meta)
-			r.Mount("/accounts", accountHandler)
+			r.Mount("/accounts", handler.NewAccountHandler(c, v, l))
+
+			// Transactions
+			// r.Mount("/accounts", handler.NewAccountHandler(c, v, l))
 		})
 
 		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", p), r))
@@ -76,4 +82,6 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().IntP("port", "p", 8000, "port to listen on")
+	serveCmd.Flags().Duration("sessionIdleTime", 24 * time.Hour, "time after which an idle session gets invalidated")
+	serveCmd.Flags().Duration("sessionLifeTime", 30 * 24 * time.Hour, "time after which an session gets invalidated")
 }
