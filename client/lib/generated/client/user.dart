@@ -29,6 +29,8 @@ class UserClient {
     String email,
     String password,
     bool enabled,
+    String firstName,
+    String lastName,
   }) async {
     final params = const {};
 
@@ -50,6 +52,14 @@ class UserClient {
 
     if (enabled != null) {
       params['enabled'] = enabled;
+    }
+
+    if (firstName != null) {
+      params['firstName'] = firstName;
+    }
+
+    if (lastName != null) {
+      params['lastName'] = lastName;
     }
 
     final r = await dio.get('/$userUrl');

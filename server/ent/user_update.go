@@ -56,6 +56,18 @@ func (uu *UserUpdate) SetNillableEnabled(b *bool) *UserUpdate {
 	return uu
 }
 
+// SetFirstName sets the firstName field.
+func (uu *UserUpdate) SetFirstName(s string) *UserUpdate {
+	uu.mutation.SetFirstName(s)
+	return uu
+}
+
+// SetLastName sets the lastName field.
+func (uu *UserUpdate) SetLastName(s string) *UserUpdate {
+	uu.mutation.SetLastName(s)
+	return uu
+}
+
 // AddSessionIDs adds the sessions edge to Session by ids.
 func (uu *UserUpdate) AddSessionIDs(ids ...token.Token) *UserUpdate {
 	uu.mutation.AddSessionIDs(ids...)
@@ -275,6 +287,20 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldEnabled,
 		})
 	}
+	if value, ok := uu.mutation.FirstName(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFirstName,
+		})
+	}
+	if value, ok := uu.mutation.LastName(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldLastName,
+		})
+	}
 	if uu.mutation.SessionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -478,6 +504,18 @@ func (uuo *UserUpdateOne) SetNillableEnabled(b *bool) *UserUpdateOne {
 	if b != nil {
 		uuo.SetEnabled(*b)
 	}
+	return uuo
+}
+
+// SetFirstName sets the firstName field.
+func (uuo *UserUpdateOne) SetFirstName(s string) *UserUpdateOne {
+	uuo.mutation.SetFirstName(s)
+	return uuo
+}
+
+// SetLastName sets the lastName field.
+func (uuo *UserUpdateOne) SetLastName(s string) *UserUpdateOne {
+	uuo.mutation.SetLastName(s)
 	return uuo
 }
 
@@ -696,6 +734,20 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: user.FieldEnabled,
+		})
+	}
+	if value, ok := uuo.mutation.FirstName(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFirstName,
+		})
+	}
+	if value, ok := uuo.mutation.LastName(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldLastName,
 		})
 	}
 	if uuo.mutation.SessionsCleared() {

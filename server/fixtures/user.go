@@ -31,12 +31,16 @@ func users(refs refs, c *ent.Client) error {
 
 	b[0] = c.User.Create().
 		SetEmail("user@api.com").
+		SetFirstName("Example").
+		SetLastName("User").
 		SetPassword(string(p)).
 		SetEnabled(true)
 
 	for i := 1; i <= userCount; i++ {
 		b[i] = c.User.Create().
 			SetEmail(randomdata.Email()).
+			SetFirstName(randomdata.FirstName(randomdata.RandomGender)).
+			SetLastName(randomdata.LastName()).
 			SetPassword(string(p)).
 			SetEnabled(true)
 	}

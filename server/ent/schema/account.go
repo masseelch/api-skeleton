@@ -5,6 +5,8 @@ import (
 	"github.com/facebook/ent/schema"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
+	"github.com/masseelch/elk"
+	"skeleton/ent/transaction"
 )
 
 // Account holds the schema definition for the Account entity.
@@ -28,7 +30,14 @@ func (Account) Edges() []ent.Edge {
 		edge.To("users", User.Type).
 			StructTag(`json:"users,omitempty" groups:"account:list,account:read"`),
 		edge.To("transactions", Transaction.Type).
-			StructTag(`json:"transactions,omitempty" groups:"account:list,account:read"`),
+			StructTag(`json:"transactions,omitempty" groups:"account:list,account:read"`).
+			Annotations(
+				elk.EdgeAnnotation{
+					DefaultOrder: []elk.Order{
+						{Order: "desc", Field: transaction.FieldDate},
+					},
+				},
+			),
 	}
 }
 

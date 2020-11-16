@@ -18,6 +18,29 @@ type Tag struct {
 	Title string `json:"title,omitempty" groups:"tag:list"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty" groups:"tag:list"`
+	// Color holds the value of the "color" field.
+	Color uint32 `json:"color,omitempty" groups:"tag:list"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TagQuery when eager-loading is set.
+	Edges TagEdges `json:"edges"`
+}
+
+// TagEdges holds the relations/edges for other nodes in the graph.
+type TagEdges struct {
+	// Transactions holds the value of the transactions edge.
+	Transactions []*Transaction `json:"transactions,omitempty" groups:"tag:read"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// TransactionsOrErr returns the Transactions value or an error if the edge
+// was not loaded in eager-loading.
+func (e TagEdges) TransactionsOrErr() ([]*Transaction, error) {
+	if e.loadedTypes[0] {
+		return e.Transactions, nil
+	}
+	return nil, &NotLoadedError{edge: "transactions"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -26,6 +49,7 @@ func (*Tag) scanValues() []interface{} {
 		&sql.NullInt64{},  // id
 		&sql.NullString{}, // title
 		&sql.NullString{}, // description
+		&sql.NullInt64{},  // color
 	}
 }
 
@@ -51,7 +75,17 @@ func (t *Tag) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		t.Description = value.String
 	}
+	if value, ok := values[2].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field color", values[2])
+	} else if value.Valid {
+		t.Color = uint32(value.Int64)
+	}
 	return nil
+}
+
+// QueryTransactions queries the transactions edge of the Tag.
+func (t *Tag) QueryTransactions() *TransactionQuery {
+	return (&TagClient{config: t.config}).QueryTransactions(t)
 }
 
 // Update returns a builder for updating this Tag.

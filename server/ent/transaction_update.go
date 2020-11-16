@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"skeleton/ent/account"
 	"skeleton/ent/predicate"
+	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 	"time"
@@ -48,6 +49,12 @@ func (tu *TransactionUpdate) AddAmount(i int) *TransactionUpdate {
 	return tu
 }
 
+// SetTitle sets the title field.
+func (tu *TransactionUpdate) SetTitle(s string) *TransactionUpdate {
+	tu.mutation.SetTitle(s)
+	return tu
+}
+
 // SetUserID sets the user edge to User by id.
 func (tu *TransactionUpdate) SetUserID(id int) *TransactionUpdate {
 	tu.mutation.SetUserID(id)
@@ -86,6 +93,21 @@ func (tu *TransactionUpdate) SetAccount(a *Account) *TransactionUpdate {
 	return tu.SetAccountID(a.ID)
 }
 
+// AddTagIDs adds the tags edge to Tag by ids.
+func (tu *TransactionUpdate) AddTagIDs(ids ...int) *TransactionUpdate {
+	tu.mutation.AddTagIDs(ids...)
+	return tu
+}
+
+// AddTags adds the tags edges to Tag.
+func (tu *TransactionUpdate) AddTags(t ...*Tag) *TransactionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddTagIDs(ids...)
+}
+
 // Mutation returns the TransactionMutation object of the builder.
 func (tu *TransactionUpdate) Mutation() *TransactionMutation {
 	return tu.mutation
@@ -101,6 +123,27 @@ func (tu *TransactionUpdate) ClearUser() *TransactionUpdate {
 func (tu *TransactionUpdate) ClearAccount() *TransactionUpdate {
 	tu.mutation.ClearAccount()
 	return tu
+}
+
+// ClearTags clears all "tags" edges to type Tag.
+func (tu *TransactionUpdate) ClearTags() *TransactionUpdate {
+	tu.mutation.ClearTags()
+	return tu
+}
+
+// RemoveTagIDs removes the tags edge to Tag by ids.
+func (tu *TransactionUpdate) RemoveTagIDs(ids ...int) *TransactionUpdate {
+	tu.mutation.RemoveTagIDs(ids...)
+	return tu
+}
+
+// RemoveTags removes tags edges to Tag.
+func (tu *TransactionUpdate) RemoveTags(t ...*Tag) *TransactionUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
@@ -193,6 +236,13 @@ func (tu *TransactionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: transaction.FieldAmount,
 		})
 	}
+	if value, ok := tu.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: transaction.FieldTitle,
+		})
+	}
 	if tu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -263,6 +313,60 @@ func (tu *TransactionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedTagsIDs(); len(nodes) > 0 && !tu.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{transaction.Label}
@@ -297,6 +401,12 @@ func (tuo *TransactionUpdateOne) SetAmount(i int) *TransactionUpdateOne {
 // AddAmount adds i to amount.
 func (tuo *TransactionUpdateOne) AddAmount(i int) *TransactionUpdateOne {
 	tuo.mutation.AddAmount(i)
+	return tuo
+}
+
+// SetTitle sets the title field.
+func (tuo *TransactionUpdateOne) SetTitle(s string) *TransactionUpdateOne {
+	tuo.mutation.SetTitle(s)
 	return tuo
 }
 
@@ -338,6 +448,21 @@ func (tuo *TransactionUpdateOne) SetAccount(a *Account) *TransactionUpdateOne {
 	return tuo.SetAccountID(a.ID)
 }
 
+// AddTagIDs adds the tags edge to Tag by ids.
+func (tuo *TransactionUpdateOne) AddTagIDs(ids ...int) *TransactionUpdateOne {
+	tuo.mutation.AddTagIDs(ids...)
+	return tuo
+}
+
+// AddTags adds the tags edges to Tag.
+func (tuo *TransactionUpdateOne) AddTags(t ...*Tag) *TransactionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddTagIDs(ids...)
+}
+
 // Mutation returns the TransactionMutation object of the builder.
 func (tuo *TransactionUpdateOne) Mutation() *TransactionMutation {
 	return tuo.mutation
@@ -353,6 +478,27 @@ func (tuo *TransactionUpdateOne) ClearUser() *TransactionUpdateOne {
 func (tuo *TransactionUpdateOne) ClearAccount() *TransactionUpdateOne {
 	tuo.mutation.ClearAccount()
 	return tuo
+}
+
+// ClearTags clears all "tags" edges to type Tag.
+func (tuo *TransactionUpdateOne) ClearTags() *TransactionUpdateOne {
+	tuo.mutation.ClearTags()
+	return tuo
+}
+
+// RemoveTagIDs removes the tags edge to Tag by ids.
+func (tuo *TransactionUpdateOne) RemoveTagIDs(ids ...int) *TransactionUpdateOne {
+	tuo.mutation.RemoveTagIDs(ids...)
+	return tuo
+}
+
+// RemoveTags removes tags edges to Tag.
+func (tuo *TransactionUpdateOne) RemoveTags(t ...*Tag) *TransactionUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the updated entity.
@@ -443,6 +589,13 @@ func (tuo *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transactio
 			Column: transaction.FieldAmount,
 		})
 	}
+	if value, ok := tuo.mutation.Title(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: transaction.FieldTitle,
+		})
+	}
 	if tuo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -505,6 +658,60 @@ func (tuo *TransactionUpdateOne) sqlSave(ctx context.Context) (_node *Transactio
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: account.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedTagsIDs(); len(nodes) > 0 && !tuo.mutation.TagsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"skeleton/ent/account"
+	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 	"time"
@@ -31,6 +32,12 @@ func (tc *TransactionCreate) SetDate(t time.Time) *TransactionCreate {
 // SetAmount sets the amount field.
 func (tc *TransactionCreate) SetAmount(i int) *TransactionCreate {
 	tc.mutation.SetAmount(i)
+	return tc
+}
+
+// SetTitle sets the title field.
+func (tc *TransactionCreate) SetTitle(s string) *TransactionCreate {
+	tc.mutation.SetTitle(s)
 	return tc
 }
 
@@ -76,6 +83,21 @@ func (tc *TransactionCreate) SetNillableAccountID(id *int) *TransactionCreate {
 // SetAccount sets the account edge to Account.
 func (tc *TransactionCreate) SetAccount(a *Account) *TransactionCreate {
 	return tc.SetAccountID(a.ID)
+}
+
+// AddTagIDs adds the tags edge to Tag by ids.
+func (tc *TransactionCreate) AddTagIDs(ids ...int) *TransactionCreate {
+	tc.mutation.AddTagIDs(ids...)
+	return tc
+}
+
+// AddTags adds the tags edges to Tag.
+func (tc *TransactionCreate) AddTags(t ...*Tag) *TransactionCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTagIDs(ids...)
 }
 
 // Mutation returns the TransactionMutation object of the builder.
@@ -135,6 +157,12 @@ func (tc *TransactionCreate) check() error {
 	if _, ok := tc.mutation.Amount(); !ok {
 		return &ValidationError{Name: "amount", err: errors.New("ent: missing required field \"amount\"")}
 	}
+	if _, ok := tc.mutation.Title(); !ok {
+		return &ValidationError{Name: "title", err: errors.New("ent: missing required field \"title\"")}
+	}
+	if len(tc.mutation.TagsIDs()) == 0 {
+		return &ValidationError{Name: "tags", err: errors.New("ent: missing required edge \"tags\"")}
+	}
 	return nil
 }
 
@@ -184,6 +212,14 @@ func (tc *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 		})
 		_node.Amount = value
 	}
+	if value, ok := tc.mutation.Title(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: transaction.FieldTitle,
+		})
+		_node.Title = value
+	}
 	if nodes := tc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -214,6 +250,25 @@ func (tc *TransactionCreate) createSpec() (*Transaction, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: account.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TagsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   transaction.TagsTable,
+			Columns: transaction.TagsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

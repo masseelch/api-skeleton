@@ -47,6 +47,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "color", Type: field.TypeUint32},
 	}
 	// TagsTable holds the schema information for the "tags" table.
 	TagsTable = &schema.Table{
@@ -60,6 +61,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "date", Type: field.TypeTime},
 		{Name: "amount", Type: field.TypeInt},
+		{Name: "title", Type: field.TypeString},
 		{Name: "account_transactions", Type: field.TypeInt, Nullable: true},
 		{Name: "user_transactions", Type: field.TypeInt, Nullable: true},
 	}
@@ -71,14 +73,14 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "transactions_accounts_transactions",
-				Columns: []*schema.Column{TransactionsColumns[3]},
+				Columns: []*schema.Column{TransactionsColumns[4]},
 
 				RefColumns: []*schema.Column{AccountsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:  "transactions_users_transactions",
-				Columns: []*schema.Column{TransactionsColumns[4]},
+				Columns: []*schema.Column{TransactionsColumns[5]},
 
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.SetNull,
@@ -91,6 +93,8 @@ var (
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
 		{Name: "enabled", Type: field.TypeBool},
+		{Name: "first_name", Type: field.TypeString},
+		{Name: "last_name", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -126,6 +130,33 @@ var (
 			},
 		},
 	}
+	// TransactionTagsColumns holds the columns for the "transaction_tags" table.
+	TransactionTagsColumns = []*schema.Column{
+		{Name: "transaction_id", Type: field.TypeInt},
+		{Name: "tag_id", Type: field.TypeInt},
+	}
+	// TransactionTagsTable holds the schema information for the "transaction_tags" table.
+	TransactionTagsTable = &schema.Table{
+		Name:       "transaction_tags",
+		Columns:    TransactionTagsColumns,
+		PrimaryKey: []*schema.Column{TransactionTagsColumns[0], TransactionTagsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "transaction_tags_transaction_id",
+				Columns: []*schema.Column{TransactionTagsColumns[0]},
+
+				RefColumns: []*schema.Column{TransactionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:  "transaction_tags_tag_id",
+				Columns: []*schema.Column{TransactionTagsColumns[1]},
+
+				RefColumns: []*schema.Column{TagsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AccountsTable,
@@ -134,6 +165,7 @@ var (
 		TransactionsTable,
 		UsersTable,
 		AccountUsersTable,
+		TransactionTagsTable,
 	}
 )
 
@@ -143,4 +175,6 @@ func init() {
 	TransactionsTable.ForeignKeys[1].RefTable = UsersTable
 	AccountUsersTable.ForeignKeys[0].RefTable = AccountsTable
 	AccountUsersTable.ForeignKeys[1].RefTable = UsersTable
+	TransactionTagsTable.ForeignKeys[0].RefTable = TransactionsTable
+	TransactionTagsTable.ForeignKeys[1].RefTable = TagsTable
 }

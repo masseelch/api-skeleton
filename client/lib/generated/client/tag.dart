@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../model/tag.dart';
+import '../model/transaction.dart';
+import '../client/transaction.dart';
 
 const tagUrl = 'tags';
 
@@ -22,6 +24,7 @@ class TagClient {
     int itemsPerPage,
     String title,
     String description,
+    int color,
   }) async {
     final params = const {};
 
@@ -41,6 +44,10 @@ class TagClient {
       params['description'] = description;
     }
 
+    if (color != null) {
+      params['color'] = color;
+    }
+
     final r = await dio.get('/$tagUrl');
 
     if (r.data == null) {
@@ -58,6 +65,11 @@ class TagClient {
   Future<Tag> update(Tag e) async {
     final r = await dio.patch('/$tagUrl', data: e.toJson());
     return (Tag.fromJson(r.data));
+  }
+
+  Future<List<Transaction>> transactions(Tag e) async {
+    final r = await dio.get('/$tagUrl/${e.id}/$transactionUrl');
+    return (r.data as List).map((i) => Transaction.fromJson(i)).toList();
   }
 
   static TagClient of(BuildContext context) =>

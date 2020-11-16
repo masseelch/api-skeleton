@@ -7,7 +7,7 @@ void main() {
   runApp(const App(
     config: const Config(
       env: Environment.dev,
-      baseUrl: 'http://192.168.10.140:8000',
+      baseUrl: 'http://192.168.0.120:8000',
     ),
   ));
 }

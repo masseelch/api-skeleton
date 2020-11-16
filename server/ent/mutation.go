@@ -936,15 +936,20 @@ func (m *SessionMutation) ResetEdge(name string) error {
 // nodes in the graph.
 type TagMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	title         *string
-	description   *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Tag, error)
-	predicates    []predicate.Tag
+	op                  Op
+	typ                 string
+	id                  *int
+	title               *string
+	description         *string
+	color               *uint32
+	addcolor            *uint32
+	clearedFields       map[string]struct{}
+	transactions        map[int]struct{}
+	removedtransactions map[int]struct{}
+	clearedtransactions bool
+	done                bool
+	oldValue            func(context.Context) (*Tag, error)
+	predicates          []predicate.Tag
 }
 
 var _ ent.Mutation = (*TagMutation)(nil)
@@ -1119,6 +1124,116 @@ func (m *TagMutation) ResetDescription() {
 	delete(m.clearedFields, tag.FieldDescription)
 }
 
+// SetColor sets the color field.
+func (m *TagMutation) SetColor(u uint32) {
+	m.color = &u
+	m.addcolor = nil
+}
+
+// Color returns the color value in the mutation.
+func (m *TagMutation) Color() (r uint32, exists bool) {
+	v := m.color
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldColor returns the old color value of the Tag.
+// If the Tag object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *TagMutation) OldColor(ctx context.Context) (v uint32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldColor is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldColor requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldColor: %w", err)
+	}
+	return oldValue.Color, nil
+}
+
+// AddColor adds u to color.
+func (m *TagMutation) AddColor(u uint32) {
+	if m.addcolor != nil {
+		*m.addcolor += u
+	} else {
+		m.addcolor = &u
+	}
+}
+
+// AddedColor returns the value that was added to the color field in this mutation.
+func (m *TagMutation) AddedColor() (r uint32, exists bool) {
+	v := m.addcolor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetColor reset all changes of the "color" field.
+func (m *TagMutation) ResetColor() {
+	m.color = nil
+	m.addcolor = nil
+}
+
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (m *TagMutation) AddTransactionIDs(ids ...int) {
+	if m.transactions == nil {
+		m.transactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.transactions[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTransactions clears the transactions edge to Transaction.
+func (m *TagMutation) ClearTransactions() {
+	m.clearedtransactions = true
+}
+
+// TransactionsCleared returns if the edge transactions was cleared.
+func (m *TagMutation) TransactionsCleared() bool {
+	return m.clearedtransactions
+}
+
+// RemoveTransactionIDs removes the transactions edge to Transaction by ids.
+func (m *TagMutation) RemoveTransactionIDs(ids ...int) {
+	if m.removedtransactions == nil {
+		m.removedtransactions = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedtransactions[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTransactions returns the removed ids of transactions.
+func (m *TagMutation) RemovedTransactionsIDs() (ids []int) {
+	for id := range m.removedtransactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TransactionsIDs returns the transactions ids in the mutation.
+func (m *TagMutation) TransactionsIDs() (ids []int) {
+	for id := range m.transactions {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTransactions reset all changes of the "transactions" edge.
+func (m *TagMutation) ResetTransactions() {
+	m.transactions = nil
+	m.clearedtransactions = false
+	m.removedtransactions = nil
+}
+
 // Op returns the operation name.
 func (m *TagMutation) Op() Op {
 	return m.op
@@ -1133,12 +1248,15 @@ func (m *TagMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *TagMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.title != nil {
 		fields = append(fields, tag.FieldTitle)
 	}
 	if m.description != nil {
 		fields = append(fields, tag.FieldDescription)
+	}
+	if m.color != nil {
+		fields = append(fields, tag.FieldColor)
 	}
 	return fields
 }
@@ -1152,6 +1270,8 @@ func (m *TagMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case tag.FieldDescription:
 		return m.Description()
+	case tag.FieldColor:
+		return m.Color()
 	}
 	return nil, false
 }
@@ -1165,6 +1285,8 @@ func (m *TagMutation) OldField(ctx context.Context, name string) (ent.Value, err
 		return m.OldTitle(ctx)
 	case tag.FieldDescription:
 		return m.OldDescription(ctx)
+	case tag.FieldColor:
+		return m.OldColor(ctx)
 	}
 	return nil, fmt.Errorf("unknown Tag field %s", name)
 }
@@ -1188,6 +1310,13 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDescription(v)
 		return nil
+	case tag.FieldColor:
+		v, ok := value.(uint32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetColor(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Tag field %s", name)
 }
@@ -1195,13 +1324,21 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented
 // or decremented during this mutation.
 func (m *TagMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addcolor != nil {
+		fields = append(fields, tag.FieldColor)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was in/decremented
 // from a field with the given name. The second value indicates
 // that this field was not set, or was not define in the schema.
 func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case tag.FieldColor:
+		return m.AddedColor()
+	}
 	return nil, false
 }
 
@@ -1210,6 +1347,13 @@ func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 // type mismatch the field type.
 func (m *TagMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case tag.FieldColor:
+		v, ok := value.(uint32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddColor(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Tag numeric field %s", name)
 }
@@ -1253,6 +1397,9 @@ func (m *TagMutation) ResetField(name string) error {
 	case tag.FieldDescription:
 		m.ResetDescription()
 		return nil
+	case tag.FieldColor:
+		m.ResetColor()
+		return nil
 	}
 	return fmt.Errorf("unknown Tag field %s", name)
 }
@@ -1260,45 +1407,76 @@ func (m *TagMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *TagMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.transactions != nil {
+		edges = append(edges, tag.EdgeTransactions)
+	}
 	return edges
 }
 
 // AddedIDs returns all ids (to other nodes) that were added for
 // the given edge name.
 func (m *TagMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.transactions))
+		for id := range m.transactions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *TagMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.removedtransactions != nil {
+		edges = append(edges, tag.EdgeTransactions)
+	}
 	return edges
 }
 
 // RemovedIDs returns all ids (to other nodes) that were removed for
 // the given edge name.
 func (m *TagMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeTransactions:
+		ids := make([]ent.Value, 0, len(m.removedtransactions))
+		for id := range m.removedtransactions {
+			ids = append(ids, id)
+		}
+		return ids
+	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *TagMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedtransactions {
+		edges = append(edges, tag.EdgeTransactions)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean indicates if this edge was
 // cleared in this mutation.
 func (m *TagMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tag.EdgeTransactions:
+		return m.clearedtransactions
+	}
 	return false
 }
 
 // ClearEdge clears the value for the given name. It returns an
 // error if the edge name is not defined in the schema.
 func (m *TagMutation) ClearEdge(name string) error {
+	switch name {
+	}
 	return fmt.Errorf("unknown Tag unique edge %s", name)
 }
 
@@ -1306,6 +1484,11 @@ func (m *TagMutation) ClearEdge(name string) error {
 // given edge name. It returns an error if the edge is not
 // defined in the schema.
 func (m *TagMutation) ResetEdge(name string) error {
+	switch name {
+	case tag.EdgeTransactions:
+		m.ResetTransactions()
+		return nil
+	}
 	return fmt.Errorf("unknown Tag edge %s", name)
 }
 
@@ -1319,11 +1502,15 @@ type TransactionMutation struct {
 	date           *time.Time
 	amount         *int
 	addamount      *int
+	title          *string
 	clearedFields  map[string]struct{}
 	user           *int
 	cleareduser    bool
 	account        *int
 	clearedaccount bool
+	tags           map[int]struct{}
+	removedtags    map[int]struct{}
+	clearedtags    bool
 	done           bool
 	oldValue       func(context.Context) (*Transaction, error)
 	predicates     []predicate.Transaction
@@ -1508,6 +1695,43 @@ func (m *TransactionMutation) ResetAmount() {
 	m.addamount = nil
 }
 
+// SetTitle sets the title field.
+func (m *TransactionMutation) SetTitle(s string) {
+	m.title = &s
+}
+
+// Title returns the title value in the mutation.
+func (m *TransactionMutation) Title() (r string, exists bool) {
+	v := m.title
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTitle returns the old title value of the Transaction.
+// If the Transaction object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *TransactionMutation) OldTitle(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTitle is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTitle requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTitle: %w", err)
+	}
+	return oldValue.Title, nil
+}
+
+// ResetTitle reset all changes of the "title" field.
+func (m *TransactionMutation) ResetTitle() {
+	m.title = nil
+}
+
 // SetUserID sets the user edge to User by id.
 func (m *TransactionMutation) SetUserID(id int) {
 	m.user = &id
@@ -1586,6 +1810,59 @@ func (m *TransactionMutation) ResetAccount() {
 	m.clearedaccount = false
 }
 
+// AddTagIDs adds the tags edge to Tag by ids.
+func (m *TransactionMutation) AddTagIDs(ids ...int) {
+	if m.tags == nil {
+		m.tags = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTags clears the tags edge to Tag.
+func (m *TransactionMutation) ClearTags() {
+	m.clearedtags = true
+}
+
+// TagsCleared returns if the edge tags was cleared.
+func (m *TransactionMutation) TagsCleared() bool {
+	return m.clearedtags
+}
+
+// RemoveTagIDs removes the tags edge to Tag by ids.
+func (m *TransactionMutation) RemoveTagIDs(ids ...int) {
+	if m.removedtags == nil {
+		m.removedtags = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedtags[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTags returns the removed ids of tags.
+func (m *TransactionMutation) RemovedTagsIDs() (ids []int) {
+	for id := range m.removedtags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsIDs returns the tags ids in the mutation.
+func (m *TransactionMutation) TagsIDs() (ids []int) {
+	for id := range m.tags {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTags reset all changes of the "tags" edge.
+func (m *TransactionMutation) ResetTags() {
+	m.tags = nil
+	m.clearedtags = false
+	m.removedtags = nil
+}
+
 // Op returns the operation name.
 func (m *TransactionMutation) Op() Op {
 	return m.op
@@ -1600,12 +1877,15 @@ func (m *TransactionMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *TransactionMutation) Fields() []string {
-	fields := make([]string, 0, 2)
+	fields := make([]string, 0, 3)
 	if m.date != nil {
 		fields = append(fields, transaction.FieldDate)
 	}
 	if m.amount != nil {
 		fields = append(fields, transaction.FieldAmount)
+	}
+	if m.title != nil {
+		fields = append(fields, transaction.FieldTitle)
 	}
 	return fields
 }
@@ -1619,6 +1899,8 @@ func (m *TransactionMutation) Field(name string) (ent.Value, bool) {
 		return m.Date()
 	case transaction.FieldAmount:
 		return m.Amount()
+	case transaction.FieldTitle:
+		return m.Title()
 	}
 	return nil, false
 }
@@ -1632,6 +1914,8 @@ func (m *TransactionMutation) OldField(ctx context.Context, name string) (ent.Va
 		return m.OldDate(ctx)
 	case transaction.FieldAmount:
 		return m.OldAmount(ctx)
+	case transaction.FieldTitle:
+		return m.OldTitle(ctx)
 	}
 	return nil, fmt.Errorf("unknown Transaction field %s", name)
 }
@@ -1654,6 +1938,13 @@ func (m *TransactionMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetAmount(v)
+		return nil
+	case transaction.FieldTitle:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTitle(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Transaction field %s", name)
@@ -1726,6 +2017,9 @@ func (m *TransactionMutation) ResetField(name string) error {
 	case transaction.FieldAmount:
 		m.ResetAmount()
 		return nil
+	case transaction.FieldTitle:
+		m.ResetTitle()
+		return nil
 	}
 	return fmt.Errorf("unknown Transaction field %s", name)
 }
@@ -1733,12 +2027,15 @@ func (m *TransactionMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *TransactionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.user != nil {
 		edges = append(edges, transaction.EdgeUser)
 	}
 	if m.account != nil {
 		edges = append(edges, transaction.EdgeAccount)
+	}
+	if m.tags != nil {
+		edges = append(edges, transaction.EdgeTags)
 	}
 	return edges
 }
@@ -1755,6 +2052,12 @@ func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 		if id := m.account; id != nil {
 			return []ent.Value{*id}
 		}
+	case transaction.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.tags))
+		for id := range m.tags {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
@@ -1762,7 +2065,10 @@ func (m *TransactionMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *TransactionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
+	if m.removedtags != nil {
+		edges = append(edges, transaction.EdgeTags)
+	}
 	return edges
 }
 
@@ -1770,6 +2076,12 @@ func (m *TransactionMutation) RemovedEdges() []string {
 // the given edge name.
 func (m *TransactionMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
+	case transaction.EdgeTags:
+		ids := make([]ent.Value, 0, len(m.removedtags))
+		for id := range m.removedtags {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
@@ -1777,12 +2089,15 @@ func (m *TransactionMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *TransactionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.cleareduser {
 		edges = append(edges, transaction.EdgeUser)
 	}
 	if m.clearedaccount {
 		edges = append(edges, transaction.EdgeAccount)
+	}
+	if m.clearedtags {
+		edges = append(edges, transaction.EdgeTags)
 	}
 	return edges
 }
@@ -1795,6 +2110,8 @@ func (m *TransactionMutation) EdgeCleared(name string) bool {
 		return m.cleareduser
 	case transaction.EdgeAccount:
 		return m.clearedaccount
+	case transaction.EdgeTags:
+		return m.clearedtags
 	}
 	return false
 }
@@ -1824,6 +2141,9 @@ func (m *TransactionMutation) ResetEdge(name string) error {
 	case transaction.EdgeAccount:
 		m.ResetAccount()
 		return nil
+	case transaction.EdgeTags:
+		m.ResetTags()
+		return nil
 	}
 	return fmt.Errorf("unknown Transaction edge %s", name)
 }
@@ -1838,6 +2158,8 @@ type UserMutation struct {
 	email               *string
 	password            *string
 	enabled             *bool
+	firstName           *string
+	lastName            *string
 	clearedFields       map[string]struct{}
 	sessions            map[token.Token]struct{}
 	removedsessions     map[token.Token]struct{}
@@ -2049,6 +2371,80 @@ func (m *UserMutation) ResetEnabled() {
 	m.enabled = nil
 }
 
+// SetFirstName sets the firstName field.
+func (m *UserMutation) SetFirstName(s string) {
+	m.firstName = &s
+}
+
+// FirstName returns the firstName value in the mutation.
+func (m *UserMutation) FirstName() (r string, exists bool) {
+	v := m.firstName
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFirstName returns the old firstName value of the User.
+// If the User object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *UserMutation) OldFirstName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldFirstName is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldFirstName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFirstName: %w", err)
+	}
+	return oldValue.FirstName, nil
+}
+
+// ResetFirstName reset all changes of the "firstName" field.
+func (m *UserMutation) ResetFirstName() {
+	m.firstName = nil
+}
+
+// SetLastName sets the lastName field.
+func (m *UserMutation) SetLastName(s string) {
+	m.lastName = &s
+}
+
+// LastName returns the lastName value in the mutation.
+func (m *UserMutation) LastName() (r string, exists bool) {
+	v := m.lastName
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastName returns the old lastName value of the User.
+// If the User object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *UserMutation) OldLastName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLastName is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLastName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastName: %w", err)
+	}
+	return oldValue.LastName, nil
+}
+
+// ResetLastName reset all changes of the "lastName" field.
+func (m *UserMutation) ResetLastName() {
+	m.lastName = nil
+}
+
 // AddSessionIDs adds the sessions edge to Session by ids.
 func (m *UserMutation) AddSessionIDs(ids ...token.Token) {
 	if m.sessions == nil {
@@ -2222,7 +2618,7 @@ func (m *UserMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 5)
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
@@ -2231,6 +2627,12 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.enabled != nil {
 		fields = append(fields, user.FieldEnabled)
+	}
+	if m.firstName != nil {
+		fields = append(fields, user.FieldFirstName)
+	}
+	if m.lastName != nil {
+		fields = append(fields, user.FieldLastName)
 	}
 	return fields
 }
@@ -2246,6 +2648,10 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Password()
 	case user.FieldEnabled:
 		return m.Enabled()
+	case user.FieldFirstName:
+		return m.FirstName()
+	case user.FieldLastName:
+		return m.LastName()
 	}
 	return nil, false
 }
@@ -2261,6 +2667,10 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPassword(ctx)
 	case user.FieldEnabled:
 		return m.OldEnabled(ctx)
+	case user.FieldFirstName:
+		return m.OldFirstName(ctx)
+	case user.FieldLastName:
+		return m.OldLastName(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -2290,6 +2700,20 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEnabled(v)
+		return nil
+	case user.FieldFirstName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFirstName(v)
+		return nil
+	case user.FieldLastName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastName(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -2349,6 +2773,12 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldEnabled:
 		m.ResetEnabled()
+		return nil
+	case user.FieldFirstName:
+		m.ResetFirstName()
+		return nil
+	case user.FieldLastName:
+		m.ResetLastName()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

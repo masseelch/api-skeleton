@@ -34,6 +34,17 @@ var serveCmd = &cobra.Command{
 			panic(err)
 		}
 
+		// Session settings.
+		auth.SessionIdleTime, err = cmd.Flags().GetDuration("sessionIdleTime")
+		if err != nil {
+			panic(err)
+		}
+
+		auth.SessionLifeTime, err = cmd.Flags().GetDuration("sessionLifeTime")
+		if err != nil {
+			panic(err)
+		}
+
 		// Get a database connection for ent.
 		drv, err := sql.Open("mysql", util.MysqlDSN())
 		if err != nil {
@@ -64,7 +75,7 @@ var serveCmd = &cobra.Command{
 
 			// Users and sub-resources.
 			userHandler := handler.NewUserHandler(c, v, l)
-			userHandler.Get("/{id:\\d+}/account-meta/{from}/{to}", userHandler.Meta)
+			userHandler.Get("/{id:\\d+}/account-meta/{from}/{to}", userHandler.AccountsMeta)
 			r.Mount("/users", userHandler)
 
 			// Accounts

@@ -12,6 +12,8 @@ User _$UserFromJson(Map<String, dynamic> json) {
     ..email = json['email'] as String
     ..password = json['password'] as String
     ..enabled = json['enabled'] as bool
+    ..firstName = json['firstName'] as String
+    ..lastName = json['lastName'] as String
     ..edges = json['edges'] == null
         ? null
         : UserEdges.fromJson(json['edges'] as Map<String, dynamic>);
@@ -22,6 +24,8 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
       'email': instance.email,
       'password': instance.password,
       'enabled': instance.enabled,
+      'firstName': instance.firstName,
+      'lastName': instance.lastName,
       'edges': instance.edges?.toJson(),
     };
 

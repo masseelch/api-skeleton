@@ -28,11 +28,11 @@
   "@screenDashboardTitle": {
     "description": "Title of the dashboard screen"
   },
-  "screenDashboardListHeader": "Ausgaben im Monat {month}",
+  "screenDashboardListHeader": "Ausgaben im {month}",
   "@screenDashboardListHeader": {
     "description": "Header above the accounts accumulated expenses for the given month",
     "placeholders": {
-      "month":{
+      "month": {
         "type": "String",
         "example": "Januar"
       }
@@ -62,8 +62,28 @@
   "@screenLoginFeedbackBadCredentials": {
     "description": "Feedback to the user when the user has given bad credentials"
   },
-  "screenTransactionsTitle": "Ausgaben",
+  "screenTransactionsTitle": "Ausgaben {account}",
   "@screenTransactionsTitle": {
-    "description": "Title of the transactions screen"
+    "description": "Title of the transactions screen",
+    "placeholders": {
+      "account": {
+        "type": "String",
+        "example": "Privat"
+      }
+    }
+  },
+  "screenTransactionsEntryCreator": "{date} durch {name}",
+  "@screenTransactionsEntryCreator": {
+    "description": "Who did create this transaction and when",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "01.02.2003"
+      },
+      "name": {
+        "type": "String",
+        "example": "Max Mustermann"
+      }
+    }
   }
 }

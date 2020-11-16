@@ -453,6 +453,22 @@ func (c *TagClient) GetX(ctx context.Context, id int) *Tag {
 	return obj
 }
 
+// QueryTransactions queries the transactions edge of a Tag.
+func (c *TagClient) QueryTransactions(t *Tag) *TransactionQuery {
+	query := &TransactionQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(transaction.Table, transaction.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.TransactionsTable, tag.TransactionsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TagClient) Hooks() []Hook {
 	return c.hooks.Tag
@@ -566,6 +582,22 @@ func (c *TransactionClient) QueryAccount(t *Transaction) *AccountQuery {
 			sqlgraph.From(transaction.Table, transaction.FieldID, id),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, transaction.AccountTable, transaction.AccountColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTags queries the tags edge of a Transaction.
+func (c *TransactionClient) QueryTags(t *Transaction) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, transaction.TagsTable, transaction.TagsPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil

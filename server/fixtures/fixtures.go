@@ -10,6 +10,7 @@ const (
 	userKey = iota
 	accountKey
 	transactionKey
+	tagKey
 )
 
 type refs map[uint]interface{}
@@ -25,6 +26,9 @@ func Load(c *ent.Client) error {
 		return err
 	}
 	if err := accounts(refs, c); err != nil {
+		return err
+	}
+	if err := tags(refs, c); err != nil {
 		return err
 	}
 	if err := transactions(refs, c); err != nil {

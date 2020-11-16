@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"skeleton/ent/predicate"
 	"skeleton/ent/tag"
+	"skeleton/ent/transaction"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
@@ -52,9 +53,58 @@ func (tu *TagUpdate) ClearDescription() *TagUpdate {
 	return tu
 }
 
+// SetColor sets the color field.
+func (tu *TagUpdate) SetColor(u uint32) *TagUpdate {
+	tu.mutation.ResetColor()
+	tu.mutation.SetColor(u)
+	return tu
+}
+
+// AddColor adds u to color.
+func (tu *TagUpdate) AddColor(u uint32) *TagUpdate {
+	tu.mutation.AddColor(u)
+	return tu
+}
+
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (tu *TagUpdate) AddTransactionIDs(ids ...int) *TagUpdate {
+	tu.mutation.AddTransactionIDs(ids...)
+	return tu
+}
+
+// AddTransactions adds the transactions edges to Transaction.
+func (tu *TagUpdate) AddTransactions(t ...*Transaction) *TagUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddTransactionIDs(ids...)
+}
+
 // Mutation returns the TagMutation object of the builder.
 func (tu *TagUpdate) Mutation() *TagMutation {
 	return tu.mutation
+}
+
+// ClearTransactions clears all "transactions" edges to type Transaction.
+func (tu *TagUpdate) ClearTransactions() *TagUpdate {
+	tu.mutation.ClearTransactions()
+	return tu
+}
+
+// RemoveTransactionIDs removes the transactions edge to Transaction by ids.
+func (tu *TagUpdate) RemoveTransactionIDs(ids ...int) *TagUpdate {
+	tu.mutation.RemoveTransactionIDs(ids...)
+	return tu
+}
+
+// RemoveTransactions removes transactions edges to Transaction.
+func (tu *TagUpdate) RemoveTransactions(t ...*Transaction) *TagUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveTransactionIDs(ids...)
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
@@ -146,6 +196,74 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: tag.FieldDescription,
 		})
 	}
+	if value, ok := tu.mutation.Color(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeUint32,
+			Value:  value,
+			Column: tag.FieldColor,
+		})
+	}
+	if value, ok := tu.mutation.AddedColor(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeUint32,
+			Value:  value,
+			Column: tag.FieldColor,
+		})
+	}
+	if tu.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !tu.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tag.Label}
@@ -190,9 +308,58 @@ func (tuo *TagUpdateOne) ClearDescription() *TagUpdateOne {
 	return tuo
 }
 
+// SetColor sets the color field.
+func (tuo *TagUpdateOne) SetColor(u uint32) *TagUpdateOne {
+	tuo.mutation.ResetColor()
+	tuo.mutation.SetColor(u)
+	return tuo
+}
+
+// AddColor adds u to color.
+func (tuo *TagUpdateOne) AddColor(u uint32) *TagUpdateOne {
+	tuo.mutation.AddColor(u)
+	return tuo
+}
+
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (tuo *TagUpdateOne) AddTransactionIDs(ids ...int) *TagUpdateOne {
+	tuo.mutation.AddTransactionIDs(ids...)
+	return tuo
+}
+
+// AddTransactions adds the transactions edges to Transaction.
+func (tuo *TagUpdateOne) AddTransactions(t ...*Transaction) *TagUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddTransactionIDs(ids...)
+}
+
 // Mutation returns the TagMutation object of the builder.
 func (tuo *TagUpdateOne) Mutation() *TagMutation {
 	return tuo.mutation
+}
+
+// ClearTransactions clears all "transactions" edges to type Transaction.
+func (tuo *TagUpdateOne) ClearTransactions() *TagUpdateOne {
+	tuo.mutation.ClearTransactions()
+	return tuo
+}
+
+// RemoveTransactionIDs removes the transactions edge to Transaction by ids.
+func (tuo *TagUpdateOne) RemoveTransactionIDs(ids ...int) *TagUpdateOne {
+	tuo.mutation.RemoveTransactionIDs(ids...)
+	return tuo
+}
+
+// RemoveTransactions removes transactions edges to Transaction.
+func (tuo *TagUpdateOne) RemoveTransactions(t ...*Transaction) *TagUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveTransactionIDs(ids...)
 }
 
 // Save executes the query and returns the updated entity.
@@ -281,6 +448,74 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 			Type:   field.TypeString,
 			Column: tag.FieldDescription,
 		})
+	}
+	if value, ok := tuo.mutation.Color(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeUint32,
+			Value:  value,
+			Column: tag.FieldColor,
+		})
+	}
+	if value, ok := tuo.mutation.AddedColor(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeUint32,
+			Value:  value,
+			Column: tag.FieldColor,
+		})
+	}
+	if tuo.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedTransactionsIDs(); len(nodes) > 0 && !tuo.mutation.TransactionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Tag{config: tuo.config}
 	_spec.Assign = _node.assignValues

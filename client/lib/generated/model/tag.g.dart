@@ -11,6 +11,7 @@ Tag _$TagFromJson(Map<String, dynamic> json) {
     ..id = json['id'] as int
     ..title = json['title'] as String
     ..description = json['description'] as String
+    ..color = json['color'] as int
     ..edges = json['edges'] == null
         ? null
         : TagEdges.fromJson(json['edges'] as Map<String, dynamic>);
@@ -20,11 +21,18 @@ Map<String, dynamic> _$TagToJson(Tag instance) => <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
       'description': instance.description,
+      'color': instance.color,
       'edges': instance.edges?.toJson(),
     };
 
 TagEdges _$TagEdgesFromJson(Map<String, dynamic> json) {
-  return TagEdges();
+  return TagEdges()
+    ..transactions = (json['transactions'] as List)
+        ?.map((e) =>
+            e == null ? null : Transaction.fromJson(e as Map<String, dynamic>))
+        ?.toList();
 }
 
-Map<String, dynamic> _$TagEdgesToJson(TagEdges instance) => <String, dynamic>{};
+Map<String, dynamic> _$TagEdgesToJson(TagEdges instance) => <String, dynamic>{
+      'transactions': instance.transactions?.map((e) => e?.toJson())?.toList(),
+    };

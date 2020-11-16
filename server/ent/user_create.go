@@ -49,6 +49,18 @@ func (uc *UserCreate) SetNillableEnabled(b *bool) *UserCreate {
 	return uc
 }
 
+// SetFirstName sets the firstName field.
+func (uc *UserCreate) SetFirstName(s string) *UserCreate {
+	uc.mutation.SetFirstName(s)
+	return uc
+}
+
+// SetLastName sets the lastName field.
+func (uc *UserCreate) SetLastName(s string) *UserCreate {
+	uc.mutation.SetLastName(s)
+	return uc
+}
+
 // SetID sets the id field.
 func (uc *UserCreate) SetID(i int) *UserCreate {
 	uc.mutation.SetID(i)
@@ -174,6 +186,12 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.Enabled(); !ok {
 		return &ValidationError{Name: "enabled", err: errors.New("ent: missing required field \"enabled\"")}
 	}
+	if _, ok := uc.mutation.FirstName(); !ok {
+		return &ValidationError{Name: "firstName", err: errors.New("ent: missing required field \"firstName\"")}
+	}
+	if _, ok := uc.mutation.LastName(); !ok {
+		return &ValidationError{Name: "lastName", err: errors.New("ent: missing required field \"lastName\"")}
+	}
 	return nil
 }
 
@@ -230,6 +248,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldEnabled,
 		})
 		_node.Enabled = value
+	}
+	if value, ok := uc.mutation.FirstName(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldFirstName,
+		})
+		_node.FirstName = value
+	}
+	if value, ok := uc.mutation.LastName(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldLastName,
+		})
+		_node.LastName = value
 	}
 	if nodes := uc.mutation.SessionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

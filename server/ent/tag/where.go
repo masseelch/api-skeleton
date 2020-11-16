@@ -6,6 +6,7 @@ import (
 	"skeleton/ent/predicate"
 
 	"github.com/facebook/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their identifier.
@@ -102,6 +103,13 @@ func Title(v string) predicate.Tag {
 func Description(v string) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDescription), v))
+	})
+}
+
+// Color applies equality check predicate on the "color" field. It's identical to ColorEQ.
+func Color(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldColor), v))
 	})
 }
 
@@ -338,6 +346,110 @@ func DescriptionEqualFold(v string) predicate.Tag {
 func DescriptionContainsFold(v string) predicate.Tag {
 	return predicate.Tag(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
+	})
+}
+
+// ColorEQ applies the EQ predicate on the "color" field.
+func ColorEQ(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldColor), v))
+	})
+}
+
+// ColorNEQ applies the NEQ predicate on the "color" field.
+func ColorNEQ(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldColor), v))
+	})
+}
+
+// ColorIn applies the In predicate on the "color" field.
+func ColorIn(vs ...uint32) predicate.Tag {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Tag(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldColor), v...))
+	})
+}
+
+// ColorNotIn applies the NotIn predicate on the "color" field.
+func ColorNotIn(vs ...uint32) predicate.Tag {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Tag(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldColor), v...))
+	})
+}
+
+// ColorGT applies the GT predicate on the "color" field.
+func ColorGT(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldColor), v))
+	})
+}
+
+// ColorGTE applies the GTE predicate on the "color" field.
+func ColorGTE(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldColor), v))
+	})
+}
+
+// ColorLT applies the LT predicate on the "color" field.
+func ColorLT(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldColor), v))
+	})
+}
+
+// ColorLTE applies the LTE predicate on the "color" field.
+func ColorLTE(v uint32) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldColor), v))
+	})
+}
+
+// HasTransactions applies the HasEdge predicate on the "transactions" edge.
+func HasTransactions() predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TransactionsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, TransactionsTable, TransactionsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTransactionsWith applies the HasEdge predicate on the "transactions" edge with a given conditions (other predicates).
+func HasTransactionsWith(preds ...predicate.Transaction) predicate.Tag {
+	return predicate.Tag(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TransactionsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, TransactionsTable, TransactionsPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

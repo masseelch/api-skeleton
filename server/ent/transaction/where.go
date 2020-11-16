@@ -107,6 +107,13 @@ func Amount(v int) predicate.Transaction {
 	})
 }
 
+// Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
+func Title(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
+	})
+}
+
 // DateEQ applies the EQ predicate on the "date" field.
 func DateEQ(v time.Time) predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
@@ -259,6 +266,117 @@ func AmountLTE(v int) predicate.Transaction {
 	})
 }
 
+// TitleEQ applies the EQ predicate on the "title" field.
+func TitleEQ(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleNEQ applies the NEQ predicate on the "title" field.
+func TitleNEQ(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldTitle), v))
+	})
+}
+
+// TitleIn applies the In predicate on the "title" field.
+func TitleIn(vs ...string) predicate.Transaction {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Transaction(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleNotIn applies the NotIn predicate on the "title" field.
+func TitleNotIn(vs ...string) predicate.Transaction {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Transaction(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldTitle), v...))
+	})
+}
+
+// TitleGT applies the GT predicate on the "title" field.
+func TitleGT(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleGTE applies the GTE predicate on the "title" field.
+func TitleGTE(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLT applies the LT predicate on the "title" field.
+func TitleLT(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldTitle), v))
+	})
+}
+
+// TitleLTE applies the LTE predicate on the "title" field.
+func TitleLTE(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContains applies the Contains predicate on the "title" field.
+func TitleContains(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasPrefix applies the HasPrefix predicate on the "title" field.
+func TitleHasPrefix(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleHasSuffix applies the HasSuffix predicate on the "title" field.
+func TitleHasSuffix(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldTitle), v))
+	})
+}
+
+// TitleEqualFold applies the EqualFold predicate on the "title" field.
+func TitleEqualFold(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldTitle), v))
+	})
+}
+
+// TitleContainsFold applies the ContainsFold predicate on the "title" field.
+func TitleContainsFold(v string) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldTitle), v))
+	})
+}
+
 // HasUser applies the HasEdge predicate on the "user" edge.
 func HasUser() predicate.Transaction {
 	return predicate.Transaction(func(s *sql.Selector) {
@@ -306,6 +424,34 @@ func HasAccountWith(preds ...predicate.Account) predicate.Transaction {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(AccountInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, AccountTable, AccountColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTags applies the HasEdge predicate on the "tags" edge.
+func HasTags() predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TagsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TagsTable, TagsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTagsWith applies the HasEdge predicate on the "tags" edge with a given conditions (other predicates).
+func HasTagsWith(preds ...predicate.Tag) predicate.Transaction {
+	return predicate.Transaction(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TagsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TagsTable, TagsPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

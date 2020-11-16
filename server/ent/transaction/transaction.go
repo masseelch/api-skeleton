@@ -11,11 +11,15 @@ const (
 	FieldDate = "date"
 	// FieldAmount holds the string denoting the amount field in the database.
 	FieldAmount = "amount"
+	// FieldTitle holds the string denoting the title field in the database.
+	FieldTitle = "title"
 
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeAccount holds the string denoting the account edge name in mutations.
 	EdgeAccount = "account"
+	// EdgeTags holds the string denoting the tags edge name in mutations.
+	EdgeTags = "tags"
 
 	// Table holds the table name of the transaction in the database.
 	Table = "transactions"
@@ -33,6 +37,11 @@ const (
 	AccountInverseTable = "accounts"
 	// AccountColumn is the table column denoting the account relation/edge.
 	AccountColumn = "account_transactions"
+	// TagsTable is the table the holds the tags relation/edge. The primary key declared below.
+	TagsTable = "transaction_tags"
+	// TagsInverseTable is the table name for the Tag entity.
+	// It exists in this package in order to avoid circular dependency with the "tag" package.
+	TagsInverseTable = "tags"
 )
 
 // Columns holds all SQL columns for transaction fields.
@@ -40,6 +49,7 @@ var Columns = []string{
 	FieldID,
 	FieldDate,
 	FieldAmount,
+	FieldTitle,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Transaction type.
@@ -47,6 +57,12 @@ var ForeignKeys = []string{
 	"account_transactions",
 	"user_transactions",
 }
+
+var (
+	// TagsPrimaryKey and TagsColumn2 are the table columns denoting the
+	// primary key for the tags relation (M2M).
+	TagsPrimaryKey = []string{"transaction_id", "tag_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

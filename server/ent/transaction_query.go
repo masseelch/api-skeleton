@@ -4,11 +4,13 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"fmt"
 	"math"
 	"skeleton/ent/account"
 	"skeleton/ent/predicate"
+	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
 
@@ -28,6 +30,7 @@ type TransactionQuery struct {
 	// eager-loading edges.
 	withUser    *UserQuery
 	withAccount *AccountQuery
+	withTags    *TagQuery
 	withFKs     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -95,6 +98,28 @@ func (tq *TransactionQuery) QueryAccount() *AccountQuery {
 			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
 			sqlgraph.To(account.Table, account.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, transaction.AccountTable, transaction.AccountColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTags chains the current query on the tags edge.
+func (tq *TransactionQuery) QueryTags() *TagQuery {
+	query := &TagQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(transaction.Table, transaction.FieldID, selector),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, transaction.TagsTable, transaction.TagsPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -280,6 +305,7 @@ func (tq *TransactionQuery) Clone() *TransactionQuery {
 		predicates:  append([]predicate.Transaction{}, tq.predicates...),
 		withUser:    tq.withUser.Clone(),
 		withAccount: tq.withAccount.Clone(),
+		withTags:    tq.withTags.Clone(),
 		// clone intermediate query.
 		sql:  tq.sql.Clone(),
 		path: tq.path,
@@ -305,6 +331,17 @@ func (tq *TransactionQuery) WithAccount(opts ...func(*AccountQuery)) *Transactio
 		opt(query)
 	}
 	tq.withAccount = query
+	return tq
+}
+
+//  WithTags tells the query-builder to eager-loads the nodes that are connected to
+// the "tags" edge. The optional arguments used to configure the query builder of the edge.
+func (tq *TransactionQuery) WithTags(opts ...func(*TagQuery)) *TransactionQuery {
+	query := &TagQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withTags = query
 	return tq
 }
 
@@ -375,9 +412,10 @@ func (tq *TransactionQuery) sqlAll(ctx context.Context) ([]*Transaction, error) 
 		nodes       = []*Transaction{}
 		withFKs     = tq.withFKs
 		_spec       = tq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			tq.withUser != nil,
 			tq.withAccount != nil,
+			tq.withTags != nil,
 		}
 	)
 	if tq.withUser != nil || tq.withAccount != nil {
@@ -456,6 +494,70 @@ func (tq *TransactionQuery) sqlAll(ctx context.Context) ([]*Transaction, error) 
 			}
 			for i := range nodes {
 				nodes[i].Edges.Account = n
+			}
+		}
+	}
+
+	if query := tq.withTags; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		ids := make(map[int]*Transaction, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
+			node.Edges.Tags = []*Tag{}
+		}
+		var (
+			edgeids []int
+			edges   = make(map[int][]*Transaction)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: false,
+				Table:   transaction.TagsTable,
+				Columns: transaction.TagsPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(transaction.TagsPrimaryKey[0], fks...))
+			},
+
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{&sql.NullInt64{}, &sql.NullInt64{}}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullInt64)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullInt64)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := int(eout.Int64)
+				inValue := int(ein.Int64)
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				edgeids = append(edgeids, inValue)
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, tq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "tags": %v`, err)
+		}
+		query.Where(tag.IDIn(edgeids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := edges[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected "tags" node returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Tags = append(nodes[i].Edges.Tags, n)
 			}
 		}
 	}

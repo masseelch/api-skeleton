@@ -5,6 +5,7 @@ import (
 	"github.com/facebook/ent/schema"
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
+	"github.com/masseelch/elk"
 )
 
 // Transaction holds the schema definition for the Transaction entity.
@@ -21,6 +22,8 @@ func (Transaction) Fields() []ent.Field {
 			StructTag(`groups:"transaction:list"`),
 		field.Int("amount").
 			StructTag(`groups:"transaction:list"`),
+		field.String("title").
+			StructTag(`groups:"transaction:list"`),
 	}
 }
 
@@ -35,6 +38,9 @@ func (Transaction) Edges() []ent.Edge {
 			Ref("transactions").
 			Unique().
 			StructTag(`json:"account,omitempty" groups:"transaction:list"`),
+		edge.To("tags", Tag.Type).
+			Required().
+			StructTag(`json:"tags,omitempty" groups:"transaction:list"`),
 	}
 }
 
@@ -43,6 +49,9 @@ func (Transaction) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		edge.Annotation{
 			StructTag: `json:"edges" groups:"transaction:list"`,
+		},
+		elk.HandlerAnnotation{
+			ListGroups: []string{"transaction:list", "user:list", "tag:list"},
 		},
 	}
 }

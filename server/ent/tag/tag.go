@@ -11,9 +11,19 @@ const (
 	FieldTitle = "title"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldColor holds the string denoting the color field in the database.
+	FieldColor = "color"
+
+	// EdgeTransactions holds the string denoting the transactions edge name in mutations.
+	EdgeTransactions = "transactions"
 
 	// Table holds the table name of the tag in the database.
 	Table = "tags"
+	// TransactionsTable is the table the holds the transactions relation/edge. The primary key declared below.
+	TransactionsTable = "transaction_tags"
+	// TransactionsInverseTable is the table name for the Transaction entity.
+	// It exists in this package in order to avoid circular dependency with the "transaction" package.
+	TransactionsInverseTable = "transactions"
 )
 
 // Columns holds all SQL columns for tag fields.
@@ -21,7 +31,14 @@ var Columns = []string{
 	FieldID,
 	FieldTitle,
 	FieldDescription,
+	FieldColor,
 }
+
+var (
+	// TransactionsPrimaryKey and TransactionsColumn2 are the table columns denoting the
+	// primary key for the transactions relation (M2M).
+	TransactionsPrimaryKey = []string{"transaction_id", "tag_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

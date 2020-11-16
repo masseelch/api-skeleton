@@ -11,7 +11,6 @@ class Session {
 
   String id;
   DateTime idleTimeExpiredAt;
-
   DateTime lifeTimeExpiredAt;
 
   SessionEdges edges;

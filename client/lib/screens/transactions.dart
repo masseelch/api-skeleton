@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import '../generated/client/account.dart';
 import '../generated/model/account.dart';
 import '../generated/model/transaction.dart';
-import '../utils/num_extensions.dart';
-import '../widgets/drawer.dart';
+import '../generated/model/user.dart';
+import '../widgets/money.dart';
 import '../widgets/progress_indicators.dart';
 
 class TransactionsScreen extends StatefulWidget {
@@ -31,11 +31,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
     return Scaffold(
-      drawer: const AppDrawer(),
-      appBar: AppBar(title: Text(t.screenTransactionsTitle)),
+      appBar: AppBar(
+        title: Text(t.screenTransactionsTitle(widget.account.title)),
+      ),
       // floatingActionButton: FloatingActionButton(
       //   backgroundColor: theme.primaryColor,
       //   foregroundColor: theme.colorScheme.onPrimary,
@@ -56,27 +55,65 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             // todo - handle error
           }
 
-          final dateFormat = DateFormat.yMd(t.localeName).add_jm();
-
           return ListView.separated(
             itemCount: snapshot.data.length,
             separatorBuilder: (_, __) => const Divider(),
-            itemBuilder: (context, index) {
-              final transaction = snapshot.data[index];
-
-              return ListTile(
-                title: Text(dateFormat.format(transaction.date)),
-                subtitle: Text(
-                  transaction.amount.toMoneyDisplay(),
-                  textAlign: TextAlign.right,
-                  style: const TextStyle().copyWith(
-                    color: theme.accentColor,
-                  ),
-                ),
-              );
-            },
+            itemBuilder: (context, index) => _Entry(snapshot.data[index]),
           );
         },
+      ),
+    );
+  }
+}
+
+class _Entry extends StatelessWidget {
+  _Entry(this.transaction);
+
+  final Transaction transaction;
+
+  User get user => transaction.edges.user;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final dateFormat = DateFormat.yMMMMEEEEd(t.localeName);
+
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                children: transaction.edges.tags
+                    .map((tag) => Chip(
+                          backgroundColor: Color(tag.color),
+                          label: Text(tag.title),
+                          padding: const EdgeInsets.all(2),
+                        ))
+                    .toList(),
+                spacing: 5,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                transaction.title,
+                style: theme.textTheme.subtitle1,
+              ),
+              const SizedBox(height: 5),
+              Text(
+                t.screenTransactionsEntryCreator(
+                  dateFormat.format(transaction.date),
+                  '${user.firstName} ${user.lastName}',
+                ),
+                style: theme.textTheme.caption,
+              ),
+            ],
+          ),
+          Money(transaction.amount),
+        ],
       ),
     );
   }

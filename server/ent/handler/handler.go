@@ -122,9 +122,9 @@ func (h AccountHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qb := h.client.Account.Query().Where(account.ID(id))
+	q := h.client.Account.Query().Where(account.ID(id))
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -225,11 +225,11 @@ func (h AccountHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
 
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("title"); f != "" {
-		q = q.Where(account.Title(f))
+		q.Where(account.Title(f))
 	}
 
 	es, err := q.All(r.Context())
@@ -255,9 +255,48 @@ func (h AccountHandler) Users(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.Account.Query().Where(account.ID(id)).QueryUsers()
+	q := h.client.Account.Query().Where(account.ID(id)).QueryUsers()
 
-	es, err := qb.All(r.Context())
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("email"); f != "" {
+		q.Where(user.Email(f))
+	}
+
+	if f := r.URL.Query().Get("password"); f != "" {
+		q.Where(user.Password(f))
+	}
+
+	if f := r.URL.Query().Get("enabled"); f != "" {
+		var b bool
+		if f == "true" {
+			b = true
+		} else if f == "false" {
+			b = false
+		} else {
+			h.logger.WithError(err).WithField("enabled", f).Debug("could not parse query parameter")
+			render.BadRequest(w, r, "'enabled' must be 'true' or 'false'")
+			return
+		}
+		q.Where(user.Enabled(b))
+	}
+
+	if f := r.URL.Query().Get("firstName"); f != "" {
+		q.Where(user.FirstName(f))
+	}
+
+	if f := r.URL.Query().Get("lastName"); f != "" {
+		q.Where(user.LastName(f))
+	}
+
+	es, err := q.All(r.Context())
 	if err != nil {
 		h.logger.WithError(err).Error("error querying database") // todo - better error
 		render.InternalServerError(w, r, nil)
@@ -281,16 +320,52 @@ func (h AccountHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.Account.Query().Where(account.ID(id)).QueryTransactions()
+	q := h.client.Account.Query().Where(account.ID(id)).QueryTransactions()
 
-	es, err := qb.All(r.Context())
+	if r.URL.Query().Get("order") == "" {
+		q.Order(ent.Desc("date"))
+	}
+
+	// Eager load edges.
+	q.WithUser().WithTags(func(q *ent.TagQuery) {
+		q.Order(ent.Asc("title"))
+	})
+
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("date"); f != "" {
+		// todo
+	}
+
+	if f := r.URL.Query().Get("amount"); f != "" {
+		i, err := strconv.Atoi(f)
+		if err != nil {
+			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
+			render.BadRequest(w, r, "'amount' must be an integer")
+			return
+		}
+		q.Where(transaction.Amount(i))
+	}
+
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(transaction.Title(f))
+	}
+
+	es, err := q.All(r.Context())
 	if err != nil {
 		h.logger.WithError(err).Error("error querying database") // todo - better error
 		render.InternalServerError(w, r, nil)
 		return
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
 	if err != nil {
 		h.logger.WithError(err).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -324,13 +399,17 @@ func NewTagHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *Ta
 
 	h.Get("/", h.List)
 
+	h.Get("/{id:\\d+}/transactions", h.Transactions)
+
 	return h
 }
 
 // struct to bind the post body to.
 type tagCreateRequest struct {
-	Title       string `json:"title,omitempty" `
-	Description string `json:"description,omitempty" `
+	Title        string `json:"title,omitempty" `
+	Description  string `json:"description,omitempty" `
+	Color        uint32 `json:"color,omitempty" `
+	Transactions []int  `json:"transactions,omitempty" `
 }
 
 // This function creates a new Tag model and stores it in the database.
@@ -359,7 +438,9 @@ func (h TagHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Save the data.
 	b := h.client.Tag.Create().
 		SetTitle(d.Title).
-		SetDescription(d.Description)
+		SetDescription(d.Description).
+		SetColor(d.Color).
+		AddTransactionIDs(d.Transactions...)
 
 	// Store in database.
 	e, err := b.Save(r.Context())
@@ -389,9 +470,9 @@ func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qb := h.client.Tag.Query().Where(tag.ID(id))
+	q := h.client.Tag.Query().Where(tag.ID(id))
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -423,8 +504,10 @@ func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type tagUpdateRequest struct {
-	Title       string `json:"title,omitempty" `
-	Description string `json:"description,omitempty" `
+	Title        string `json:"title,omitempty" `
+	Description  string `json:"description,omitempty" `
+	Color        uint32 `json:"color,omitempty" `
+	Transactions []int  `json:"transactions,omitempty" `
 }
 
 // This function updates a given Tag model and saves the changes in the database.
@@ -458,7 +541,9 @@ func (h TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Save the data.
 	b := h.client.Tag.UpdateOneID(id).
 		SetTitle(d.Title).
-		SetDescription(d.Description)
+		SetDescription(d.Description).
+		SetColor(d.Color).
+		AddTransactionIDs(d.Transactions...)
 
 	// Save in database.
 	e, err := b.Save(r.Context())
@@ -484,21 +569,28 @@ func (h TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.Tag.Query()
 
+	if r.URL.Query().Get("order") == "" {
+		q.Order(ent.Asc("title"))
+	}
+
 	// Pagination
 	page, itemsPerPage, err := h.paginationInfo(w, r)
 	if err != nil {
 		return
 	}
 
-	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
 
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("title"); f != "" {
-		q = q.Where(tag.Title(f))
+		q.Where(tag.Title(f))
 	}
 
 	if f := r.URL.Query().Get("description"); f != "" {
-		q = q.Where(tag.Description(f))
+		q.Where(tag.Description(f))
+	}
+
+	if f := r.URL.Query().Get("color"); f != "" {
 	}
 
 	es, err := q.All(r.Context())
@@ -517,6 +609,62 @@ func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	h.logger.WithField("amount", len(es)).Info("tag rendered")
 	render.OK(w, r, d)
+}
+
+func (h TagHandler) Transactions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	q := h.client.Tag.Query().Where(tag.ID(id)).QueryTransactions()
+
+	// Eager load edges.
+	q.WithUser().WithAccount()
+
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("date"); f != "" {
+		// todo
+	}
+
+	if f := r.URL.Query().Get("amount"); f != "" {
+		i, err := strconv.Atoi(f)
+		if err != nil {
+			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
+			render.BadRequest(w, r, "'amount' must be an integer")
+			return
+		}
+		q.Where(transaction.Amount(i))
+	}
+
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(transaction.Title(f))
+	}
+
+	es, err := q.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("transaction rendered")
+	render.OK(w, r, d)
+
 }
 
 // The TransactionHandler.
@@ -543,6 +691,7 @@ func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Log
 
 	h.Get("/{id:\\d+}/user", h.User)
 	h.Get("/{id:\\d+}/account", h.Account)
+	h.Get("/{id:\\d+}/tags", h.Tags)
 
 	return h
 }
@@ -551,8 +700,10 @@ func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Log
 type transactionCreateRequest struct {
 	Date    time.Time `json:"date,omitempty" `
 	Amount  int       `json:"amount,omitempty" `
+	Title   string    `json:"title,omitempty" `
 	User    int       `json:"user,omitempty" `
 	Account int       `json:"account,omitempty" `
+	Tags    []int     `json:"tags,omitempty" `
 }
 
 // This function creates a new Transaction model and stores it in the database.
@@ -582,8 +733,10 @@ func (h TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 	b := h.client.Transaction.Create().
 		SetDate(d.Date).
 		SetAmount(d.Amount).
+		SetTitle(d.Title).
 		SetUserID(d.User).
-		SetAccountID(d.Account)
+		SetAccountID(d.Account).
+		AddTagIDs(d.Tags...)
 
 	// Store in database.
 	e, err := b.Save(r.Context())
@@ -613,9 +766,9 @@ func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qb := h.client.Transaction.Query().Where(transaction.ID(id))
+	q := h.client.Transaction.Query().Where(transaction.ID(id))
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -649,8 +802,10 @@ func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
 type transactionUpdateRequest struct {
 	Date    time.Time `json:"date,omitempty" `
 	Amount  int       `json:"amount,omitempty" `
+	Title   string    `json:"title,omitempty" `
 	User    int       `json:"user,omitempty" `
 	Account int       `json:"account,omitempty" `
+	Tags    []int     `json:"tags,omitempty" `
 }
 
 // This function updates a given Transaction model and saves the changes in the database.
@@ -685,8 +840,10 @@ func (h TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 	b := h.client.Transaction.UpdateOneID(id).
 		SetDate(d.Date).
 		SetAmount(d.Amount).
+		SetTitle(d.Title).
 		SetUserID(d.User).
-		SetAccountID(d.Account)
+		SetAccountID(d.Account).
+		AddTagIDs(d.Tags...)
 
 	// Save in database.
 	e, err := b.Save(r.Context())
@@ -712,13 +869,16 @@ func (h TransactionHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	q := h.client.Transaction.Query()
 
+	// Eager load edges.
+	q.WithUser().WithAccount().WithTags()
+
 	// Pagination
 	page, itemsPerPage, err := h.paginationInfo(w, r)
 	if err != nil {
 		return
 	}
 
-	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
 
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("date"); f != "" {
@@ -732,7 +892,11 @@ func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 			render.BadRequest(w, r, "'amount' must be an integer")
 			return
 		}
-		q = q.Where(transaction.Amount(i))
+		q.Where(transaction.Amount(i))
+	}
+
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(transaction.Title(f))
 	}
 
 	es, err := q.All(r.Context())
@@ -758,9 +922,9 @@ func (h TransactionHandler) User(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryUser()
+	q := h.client.Transaction.Query().Where(transaction.ID(id)).QueryUser()
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -796,9 +960,9 @@ func (h TransactionHandler) Account(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.Transaction.Query().Where(transaction.ID(id)).QueryAccount()
+	q := h.client.Transaction.Query().Where(transaction.ID(id)).QueryAccount()
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -825,6 +989,56 @@ func (h TransactionHandler) Account(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.WithField("account", e.ID).Info("account rendered")
+	render.OK(w, r, d)
+
+}
+
+func (h TransactionHandler) Tags(w http.ResponseWriter, r *http.Request) {
+	id, err := h.urlParamInt(w, r, "id")
+	if err != nil {
+		return
+	}
+	q := h.client.Transaction.Query().Where(transaction.ID(id)).QueryTags()
+
+	if r.URL.Query().Get("order") == "" {
+		q.Order(ent.Asc("title"))
+	}
+
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(tag.Title(f))
+	}
+
+	if f := r.URL.Query().Get("description"); f != "" {
+		q.Where(tag.Description(f))
+	}
+
+	if f := r.URL.Query().Get("color"); f != "" {
+	}
+
+	es, err := q.All(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error querying database") // todo - better error
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"tag:list"}}, es)
+	if err != nil {
+		h.logger.WithError(err).Error("serialization error")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
+	h.logger.WithField("amount", len(es)).Info("tag rendered")
 	render.OK(w, r, d)
 
 }
@@ -860,9 +1074,11 @@ func NewUserHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *U
 
 // struct to bind the post body to.
 type userCreateRequest struct {
-	Email    string `json:"email,omitempty" `
-	Password string `json:"password,omitempty" `
-	Enabled  bool   `json:"enabled,omitempty" `
+	Email     string `json:"email,omitempty" `
+	Password  string `json:"password,omitempty" `
+	Enabled   bool   `json:"enabled,omitempty" `
+	FirstName string `json:"firstName,omitempty" `
+	LastName  string `json:"lastName,omitempty" `
 }
 
 // This function creates a new User model and stores it in the database.
@@ -892,7 +1108,9 @@ func (h UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 	b := h.client.User.Create().
 		SetEmail(d.Email).
 		SetPassword(d.Password).
-		SetEnabled(d.Enabled)
+		SetEnabled(d.Enabled).
+		SetFirstName(d.FirstName).
+		SetLastName(d.LastName)
 
 	// Store in database.
 	e, err := b.Save(r.Context())
@@ -922,9 +1140,9 @@ func (h UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	qb := h.client.User.Query().Where(user.ID(id))
+	q := h.client.User.Query().Where(user.ID(id))
 
-	e, err := qb.Only(r.Context())
+	e, err := q.Only(r.Context())
 
 	if err != nil {
 		switch err.(type) {
@@ -956,9 +1174,11 @@ func (h UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type userUpdateRequest struct {
-	Email    string `json:"email,omitempty" `
-	Password string `json:"password,omitempty" `
-	Enabled  bool   `json:"enabled,omitempty" `
+	Email     string `json:"email,omitempty" `
+	Password  string `json:"password,omitempty" `
+	Enabled   bool   `json:"enabled,omitempty" `
+	FirstName string `json:"firstName,omitempty" `
+	LastName  string `json:"lastName,omitempty" `
 }
 
 // This function updates a given User model and saves the changes in the database.
@@ -993,7 +1213,9 @@ func (h UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	b := h.client.User.UpdateOneID(id).
 		SetEmail(d.Email).
 		SetPassword(d.Password).
-		SetEnabled(d.Enabled)
+		SetEnabled(d.Enabled).
+		SetFirstName(d.FirstName).
+		SetLastName(d.LastName)
 
 	// Save in database.
 	e, err := b.Save(r.Context())
@@ -1025,15 +1247,15 @@ func (h UserHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q = q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
 
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("email"); f != "" {
-		q = q.Where(user.Email(f))
+		q.Where(user.Email(f))
 	}
 
 	if f := r.URL.Query().Get("password"); f != "" {
-		q = q.Where(user.Password(f))
+		q.Where(user.Password(f))
 	}
 
 	if f := r.URL.Query().Get("enabled"); f != "" {
@@ -1047,7 +1269,15 @@ func (h UserHandler) List(w http.ResponseWriter, r *http.Request) {
 			render.BadRequest(w, r, "'enabled' must be 'true' or 'false'")
 			return
 		}
-		q = q.Where(user.Enabled(b))
+		q.Where(user.Enabled(b))
+	}
+
+	if f := r.URL.Query().Get("firstName"); f != "" {
+		q.Where(user.FirstName(f))
+	}
+
+	if f := r.URL.Query().Get("lastName"); f != "" {
+		q.Where(user.LastName(f))
 	}
 
 	es, err := q.All(r.Context())
@@ -1073,9 +1303,26 @@ func (h UserHandler) Sessions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.User.Query().Where(user.ID(id)).QuerySessions()
+	q := h.client.User.Query().Where(user.ID(id)).QuerySessions()
 
-	es, err := qb.All(r.Context())
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("idleTimeExpiredAt"); f != "" {
+		// todo
+	}
+
+	if f := r.URL.Query().Get("lifeTimeExpiredAt"); f != "" {
+		// todo
+	}
+
+	es, err := q.All(r.Context())
 	if err != nil {
 		h.logger.WithError(err).Error("error querying database") // todo - better error
 		render.InternalServerError(w, r, nil)
@@ -1099,9 +1346,22 @@ func (h UserHandler) Accounts(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.User.Query().Where(user.ID(id)).QueryAccounts()
+	q := h.client.User.Query().Where(user.ID(id)).QueryAccounts()
 
-	es, err := qb.All(r.Context())
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(account.Title(f))
+	}
+
+	es, err := q.All(r.Context())
 	if err != nil {
 		h.logger.WithError(err).Error("error querying database") // todo - better error
 		render.InternalServerError(w, r, nil)
@@ -1125,16 +1385,48 @@ func (h UserHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	qb := h.client.User.Query().Where(user.ID(id)).QueryTransactions()
+	q := h.client.User.Query().Where(user.ID(id)).QueryTransactions()
 
-	es, err := qb.All(r.Context())
+	// Eager load edges.
+	q.WithAccount().WithTags(func(q *ent.TagQuery) {
+		q.Order(ent.Asc("title"))
+	})
+
+	// Pagination
+	page, itemsPerPage, err := h.paginationInfo(w, r)
+	if err != nil {
+		return
+	}
+
+	q.Limit(itemsPerPage).Offset((page - 1) * itemsPerPage)
+
+	// Use the query parameters to filter the query. todo - nested filter?
+	if f := r.URL.Query().Get("date"); f != "" {
+		// todo
+	}
+
+	if f := r.URL.Query().Get("amount"); f != "" {
+		i, err := strconv.Atoi(f)
+		if err != nil {
+			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
+			render.BadRequest(w, r, "'amount' must be an integer")
+			return
+		}
+		q.Where(transaction.Amount(i))
+	}
+
+	if f := r.URL.Query().Get("title"); f != "" {
+		q.Where(transaction.Title(f))
+	}
+
+	es, err := q.All(r.Context())
 	if err != nil {
 		h.logger.WithError(err).Error("error querying database") // todo - better error
 		render.InternalServerError(w, r, nil)
 		return
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list"}}, es)
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
 	if err != nil {
 		h.logger.WithError(err).Error("serialization error")
 		render.InternalServerError(w, r, nil)

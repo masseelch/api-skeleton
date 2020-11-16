@@ -13,6 +13,10 @@ const (
 	FieldPassword = "password"
 	// FieldEnabled holds the string denoting the enabled field in the database.
 	FieldEnabled = "enabled"
+	// FieldFirstName holds the string denoting the firstname field in the database.
+	FieldFirstName = "first_name"
+	// FieldLastName holds the string denoting the lastname field in the database.
+	FieldLastName = "last_name"
 
 	// EdgeSessions holds the string denoting the sessions edge name in mutations.
 	EdgeSessions = "sessions"
@@ -50,6 +54,8 @@ var Columns = []string{
 	FieldEmail,
 	FieldPassword,
 	FieldEnabled,
+	FieldFirstName,
+	FieldLastName,
 }
 
 var (

@@ -41,7 +41,7 @@ func (Session) Edges() []ent.Edge {
 func (Session) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		elk.HandlerAnnotation{
-			SkipGeneration: true,
+			Skip: true,
 		},
 		edge.Annotation{
 			StructTag: `json:"edges" groups:"auth:login"`,

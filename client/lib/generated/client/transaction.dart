@@ -8,6 +8,8 @@ import '../model/user.dart';
 import '../client/user.dart';
 import '../model/account.dart';
 import '../client/account.dart';
+import '../model/tag.dart';
+import '../client/tag.dart';
 
 const transactionUrl = 'transactions';
 
@@ -26,6 +28,7 @@ class TransactionClient {
     int itemsPerPage,
     DateTime date,
     int amount,
+    String title,
   }) async {
     final params = const {};
 
@@ -43,6 +46,10 @@ class TransactionClient {
 
     if (amount != null) {
       params['amount'] = amount;
+    }
+
+    if (title != null) {
+      params['title'] = title;
     }
 
     final r = await dio.get('/$transactionUrl');
@@ -72,6 +79,11 @@ class TransactionClient {
   Future<Account> account(Transaction e) async {
     final r = await dio.get('/$transactionUrl/${e.id}/$accountUrl');
     return (Account.fromJson(r.data));
+  }
+
+  Future<List<Tag>> tags(Transaction e) async {
+    final r = await dio.get('/$transactionUrl/${e.id}/$tagUrl');
+    return (r.data as List).map((i) => Tag.fromJson(i)).toList();
   }
 
   static TransactionClient of(BuildContext context) =>

@@ -28,6 +28,10 @@ func (User) Fields() []ent.Field {
 			Sensitive(),
 		field.Bool("enabled").
 			Default(false),
+		field.String("firstName").
+			StructTag(`groups:"user:list"`),
+		field.String("lastName").
+			StructTag(`groups:"user:list"`),
 	}
 }
 

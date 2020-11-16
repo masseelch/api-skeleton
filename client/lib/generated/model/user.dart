@@ -15,10 +15,10 @@ class User {
 
   int id;
   String email;
-
   String password;
-
   bool enabled;
+  String firstName;
+  String lastName;
 
   UserEdges edges;
 

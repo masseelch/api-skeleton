@@ -1,6 +1,8 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:json_annotation/json_annotation.dart';
 
+import '../model/transaction.dart';
+
 part 'tag.g.dart';
 
 @JsonSerializable()
@@ -9,8 +11,8 @@ class Tag {
 
   int id;
   String title;
-
   String description;
+  int color;
 
   TagEdges edges;
 
@@ -21,6 +23,8 @@ class Tag {
 @JsonSerializable()
 class TagEdges {
   TagEdges();
+
+  List<Transaction> transactions;
 
   factory TagEdges.fromJson(Map<String, dynamic> json) =>
       _$TagEdgesFromJson(json);

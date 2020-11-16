@@ -10,12 +10,7 @@ import (
 	"skeleton/ent/user"
 )
 
-type metaResponse []struct {
-	Account             ent.Account `json:"account"`
-	AccumulatedExpenses int         `json:"accumulated_expenses"`
-}
-
-func (h UserHandler) Meta(w http.ResponseWriter, r *http.Request) {
+func (h UserHandler) AccountsMeta(w http.ResponseWriter, r *http.Request) {
 	id, err := h.urlParamInt(w, r, "id")
 	if err != nil {
 		return

@@ -20,6 +20,10 @@ type User struct {
 	Password string `groups:"-" json:"-"`
 	// Enabled holds the value of the "enabled" field.
 	Enabled bool `json:"enabled,omitempty"`
+	// FirstName holds the value of the "firstName" field.
+	FirstName string `json:"firstName,omitempty" groups:"user:list"`
+	// LastName holds the value of the "lastName" field.
+	LastName string `json:"lastName,omitempty" groups:"user:list"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges UserEdges `json:"edges" groups:"user:read"`
@@ -72,6 +76,8 @@ func (*User) scanValues() []interface{} {
 		&sql.NullString{}, // email
 		&sql.NullString{}, // password
 		&sql.NullBool{},   // enabled
+		&sql.NullString{}, // firstName
+		&sql.NullString{}, // lastName
 	}
 }
 
@@ -101,6 +107,16 @@ func (u *User) assignValues(values ...interface{}) error {
 		return fmt.Errorf("unexpected type %T for field enabled", values[2])
 	} else if value.Valid {
 		u.Enabled = value.Bool
+	}
+	if value, ok := values[3].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field firstName", values[3])
+	} else if value.Valid {
+		u.FirstName = value.String
+	}
+	if value, ok := values[4].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field lastName", values[4])
+	} else if value.Valid {
+		u.LastName = value.String
 	}
 	return nil
 }

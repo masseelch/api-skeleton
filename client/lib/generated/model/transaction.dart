@@ -5,6 +5,8 @@ import '../model/user.dart';
 
 import '../model/account.dart';
 
+import '../model/tag.dart';
+
 part 'transaction.g.dart';
 
 @JsonSerializable()
@@ -13,8 +15,8 @@ class Transaction {
 
   int id;
   DateTime date;
-
   int amount;
+  String title;
 
   TransactionEdges edges;
 
@@ -30,6 +32,8 @@ class TransactionEdges {
   User user;
 
   Account account;
+
+  List<Tag> tags;
 
   factory TransactionEdges.fromJson(Map<String, dynamic> json) =>
       _$TransactionEdgesFromJson(json);

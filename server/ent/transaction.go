@@ -21,6 +21,8 @@ type Transaction struct {
 	Date time.Time `json:"date,omitempty" groups:"transaction:list"`
 	// Amount holds the value of the "amount" field.
 	Amount int `json:"amount,omitempty" groups:"transaction:list"`
+	// Title holds the value of the "title" field.
+	Title string `json:"title,omitempty" groups:"transaction:list"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TransactionQuery when eager-loading is set.
 	Edges                TransactionEdges `json:"edges" groups:"transaction:list"`
@@ -34,9 +36,11 @@ type TransactionEdges struct {
 	User *User `json:"user,omitempty" groups:"transaction:list"`
 	// Account holds the value of the account edge.
 	Account *Account `json:"account,omitempty" groups:"transaction:list"`
+	// Tags holds the value of the tags edge.
+	Tags []*Tag `json:"tags,omitempty" groups:"transaction:list"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -67,12 +71,22 @@ func (e TransactionEdges) AccountOrErr() (*Account, error) {
 	return nil, &NotLoadedError{edge: "account"}
 }
 
+// TagsOrErr returns the Tags value or an error if the edge
+// was not loaded in eager-loading.
+func (e TransactionEdges) TagsOrErr() ([]*Tag, error) {
+	if e.loadedTypes[2] {
+		return e.Tags, nil
+	}
+	return nil, &NotLoadedError{edge: "tags"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Transaction) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // id
-		&sql.NullTime{},  // date
-		&sql.NullInt64{}, // amount
+		&sql.NullInt64{},  // id
+		&sql.NullTime{},   // date
+		&sql.NullInt64{},  // amount
+		&sql.NullString{}, // title
 	}
 }
 
@@ -106,7 +120,12 @@ func (t *Transaction) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		t.Amount = int(value.Int64)
 	}
-	values = values[2:]
+	if value, ok := values[2].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field title", values[2])
+	} else if value.Valid {
+		t.Title = value.String
+	}
+	values = values[3:]
 	if len(values) == len(transaction.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field account_transactions", value)
@@ -132,6 +151,11 @@ func (t *Transaction) QueryUser() *UserQuery {
 // QueryAccount queries the account edge of the Transaction.
 func (t *Transaction) QueryAccount() *AccountQuery {
 	return (&TransactionClient{config: t.config}).QueryAccount(t)
+}
+
+// QueryTags queries the tags edge of the Transaction.
+func (t *Transaction) QueryTags() *TagQuery {
+	return (&TransactionClient{config: t.config}).QueryTags(t)
 }
 
 // Update returns a builder for updating this Transaction.

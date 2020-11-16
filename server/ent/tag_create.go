@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"skeleton/ent/tag"
+	"skeleton/ent/transaction"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
@@ -39,10 +40,31 @@ func (tc *TagCreate) SetNillableDescription(s *string) *TagCreate {
 	return tc
 }
 
+// SetColor sets the color field.
+func (tc *TagCreate) SetColor(u uint32) *TagCreate {
+	tc.mutation.SetColor(u)
+	return tc
+}
+
 // SetID sets the id field.
 func (tc *TagCreate) SetID(i int) *TagCreate {
 	tc.mutation.SetID(i)
 	return tc
+}
+
+// AddTransactionIDs adds the transactions edge to Transaction by ids.
+func (tc *TagCreate) AddTransactionIDs(ids ...int) *TagCreate {
+	tc.mutation.AddTransactionIDs(ids...)
+	return tc
+}
+
+// AddTransactions adds the transactions edges to Transaction.
+func (tc *TagCreate) AddTransactions(t ...*Transaction) *TagCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTransactionIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
@@ -99,6 +121,9 @@ func (tc *TagCreate) check() error {
 	if _, ok := tc.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New("ent: missing required field \"title\"")}
 	}
+	if _, ok := tc.mutation.Color(); !ok {
+		return &ValidationError{Name: "color", err: errors.New("ent: missing required field \"color\"")}
+	}
 	return nil
 }
 
@@ -147,6 +172,33 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 			Column: tag.FieldDescription,
 		})
 		_node.Description = value
+	}
+	if value, ok := tc.mutation.Color(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeUint32,
+			Value:  value,
+			Column: tag.FieldColor,
+		})
+		_node.Color = value
+	}
+	if nodes := tc.mutation.TransactionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.TransactionsTable,
+			Columns: tag.TransactionsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: transaction.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
