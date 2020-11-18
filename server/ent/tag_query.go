@@ -278,7 +278,7 @@ func (tq *TagQuery) WithTransactions(opts ...func(*TransactionQuery)) *TagQuery 
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty" groups:"tag:list"`
+//		Title string `json:"title,omitempty" groups:"tag:list,tag:read"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -304,7 +304,7 @@ func (tq *TagQuery) GroupBy(field string, fields ...string) *TagGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Title string `json:"title,omitempty" groups:"tag:list"`
+//		Title string `json:"title,omitempty" groups:"tag:list,tag:read"`
 //	}
 //
 //	client.Tag.Query().

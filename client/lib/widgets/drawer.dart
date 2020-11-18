@@ -1,5 +1,6 @@
 import 'package:client/services/token.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer();
@@ -22,6 +23,7 @@ class AppDrawer extends StatelessWidget {
           ),
           const Divider(),
           const DashboardDrawerTile(),
+          const TagsDrawerTile(),
           const Divider(),
           const _LogoutDrawerTile(),
         ],
@@ -29,7 +31,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
-
 
 class _DrawerListTile extends StatelessWidget {
   const _DrawerListTile({
@@ -61,8 +62,21 @@ class DashboardDrawerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return _DrawerListTile(
       iconData: Icons.apps,
-      title: 'Kostenstellen', //AppLocalizations.of(context).storagesTitle,
+      title: AppLocalizations.of(context).screenDashboardTitle,
       url: '/dashboard',
+    );
+  }
+}
+
+class TagsDrawerTile extends StatelessWidget {
+  const TagsDrawerTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return _DrawerListTile(
+      iconData: Icons.label,
+      title: AppLocalizations.of(context).screenTagsTitle,
+      url: '/tags',
     );
   }
 }
@@ -71,7 +85,7 @@ void _navigateNamed(BuildContext context, String name) {
   Navigator.pushNamedAndRemoveUntil(
     context,
     name,
-        (_) => false,
+    (_) => false,
   );
 }
 

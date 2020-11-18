@@ -23,8 +23,7 @@ class TagClient {
     int page,
     int itemsPerPage,
     String title,
-    String description,
-    int color,
+    Color color,
   }) async {
     final params = const {};
 
@@ -38,10 +37,6 @@ class TagClient {
 
     if (title != null) {
       params['title'] = title;
-    }
-
-    if (description != null) {
-      params['description'] = description;
     }
 
     if (color != null) {

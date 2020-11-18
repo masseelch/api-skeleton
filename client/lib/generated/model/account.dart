@@ -1,8 +1,10 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:json_annotation/json_annotation.dart';
 
-import '../model/user.dart';
+import 'dart:ui';
+import '../../utils/json_converter.dart';
 
+import '../model/user.dart';
 import '../model/transaction.dart';
 
 part 'account.g.dart';
@@ -26,7 +28,6 @@ class AccountEdges {
   AccountEdges();
 
   List<User> users;
-
   List<Transaction> transactions;
 
   factory AccountEdges.fromJson(Map<String, dynamic> json) =>

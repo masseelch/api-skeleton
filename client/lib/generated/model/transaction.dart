@@ -1,10 +1,11 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:json_annotation/json_annotation.dart';
 
+import 'dart:ui';
+import '../../utils/json_converter.dart';
+
 import '../model/user.dart';
-
 import '../model/account.dart';
-
 import '../model/tag.dart';
 
 part 'transaction.g.dart';
@@ -30,9 +31,7 @@ class TransactionEdges {
   TransactionEdges();
 
   User user;
-
   Account account;
-
   List<Tag> tags;
 
   factory TransactionEdges.fromJson(Map<String, dynamic> json) =>

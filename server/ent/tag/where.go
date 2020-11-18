@@ -3,6 +3,7 @@
 package tag
 
 import (
+	server "skeleton"
 	"skeleton/ent/predicate"
 
 	"github.com/facebook/ent/dialect/sql"
@@ -99,17 +100,11 @@ func Title(v string) predicate.Tag {
 	})
 }
 
-// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
-func Description(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDescription), v))
-	})
-}
-
 // Color applies equality check predicate on the "color" field. It's identical to ColorEQ.
-func Color(v uint32) predicate.Tag {
+func Color(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldColor), v))
+		s.Where(sql.EQ(s.C(FieldColor), vc))
 	})
 }
 
@@ -224,150 +219,27 @@ func TitleContainsFold(v string) predicate.Tag {
 	})
 }
 
-// DescriptionEQ applies the EQ predicate on the "description" field.
-func DescriptionEQ(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionNEQ applies the NEQ predicate on the "description" field.
-func DescriptionNEQ(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionIn applies the In predicate on the "description" field.
-func DescriptionIn(vs ...string) predicate.Tag {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Tag(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldDescription), v...))
-	})
-}
-
-// DescriptionNotIn applies the NotIn predicate on the "description" field.
-func DescriptionNotIn(vs ...string) predicate.Tag {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Tag(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldDescription), v...))
-	})
-}
-
-// DescriptionGT applies the GT predicate on the "description" field.
-func DescriptionGT(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionGTE applies the GTE predicate on the "description" field.
-func DescriptionGTE(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionLT applies the LT predicate on the "description" field.
-func DescriptionLT(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionLTE applies the LTE predicate on the "description" field.
-func DescriptionLTE(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionContains applies the Contains predicate on the "description" field.
-func DescriptionContains(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
-func DescriptionHasPrefix(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
-func DescriptionHasSuffix(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionIsNil applies the IsNil predicate on the "description" field.
-func DescriptionIsNil() predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldDescription)))
-	})
-}
-
-// DescriptionNotNil applies the NotNil predicate on the "description" field.
-func DescriptionNotNil() predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldDescription)))
-	})
-}
-
-// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
-func DescriptionEqualFold(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldDescription), v))
-	})
-}
-
-// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
-func DescriptionContainsFold(v string) predicate.Tag {
-	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
-	})
-}
-
 // ColorEQ applies the EQ predicate on the "color" field.
-func ColorEQ(v uint32) predicate.Tag {
+func ColorEQ(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldColor), v))
+		s.Where(sql.EQ(s.C(FieldColor), vc))
 	})
 }
 
 // ColorNEQ applies the NEQ predicate on the "color" field.
-func ColorNEQ(v uint32) predicate.Tag {
+func ColorNEQ(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldColor), v))
+		s.Where(sql.NEQ(s.C(FieldColor), vc))
 	})
 }
 
 // ColorIn applies the In predicate on the "color" field.
-func ColorIn(vs ...uint32) predicate.Tag {
+func ColorIn(vs ...server.Color) predicate.Tag {
 	v := make([]interface{}, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = uint32(vs[i])
 	}
 	return predicate.Tag(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
@@ -381,10 +253,10 @@ func ColorIn(vs ...uint32) predicate.Tag {
 }
 
 // ColorNotIn applies the NotIn predicate on the "color" field.
-func ColorNotIn(vs ...uint32) predicate.Tag {
+func ColorNotIn(vs ...server.Color) predicate.Tag {
 	v := make([]interface{}, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = uint32(vs[i])
 	}
 	return predicate.Tag(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
@@ -398,30 +270,34 @@ func ColorNotIn(vs ...uint32) predicate.Tag {
 }
 
 // ColorGT applies the GT predicate on the "color" field.
-func ColorGT(v uint32) predicate.Tag {
+func ColorGT(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldColor), v))
+		s.Where(sql.GT(s.C(FieldColor), vc))
 	})
 }
 
 // ColorGTE applies the GTE predicate on the "color" field.
-func ColorGTE(v uint32) predicate.Tag {
+func ColorGTE(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldColor), v))
+		s.Where(sql.GTE(s.C(FieldColor), vc))
 	})
 }
 
 // ColorLT applies the LT predicate on the "color" field.
-func ColorLT(v uint32) predicate.Tag {
+func ColorLT(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldColor), v))
+		s.Where(sql.LT(s.C(FieldColor), vc))
 	})
 }
 
 // ColorLTE applies the LTE predicate on the "color" field.
-func ColorLTE(v uint32) predicate.Tag {
+func ColorLTE(v server.Color) predicate.Tag {
+	vc := uint32(v)
 	return predicate.Tag(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldColor), v))
+		s.Where(sql.LTE(s.C(FieldColor), vc))
 	})
 }
 

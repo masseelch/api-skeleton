@@ -10,6 +10,7 @@ import 'generated/client/provider.dart';
 import 'screens/dashboard.dart';
 import 'screens/login.dart';
 import 'screens/splash.dart';
+import 'screens/tags.dart';
 import 'services/token.dart';
 import 'utils/dio.dart';
 
@@ -105,7 +106,8 @@ class _AppState extends State<App> {
           routes: {
             '/': (_) => SplashScreen(logo: _logo),
             '/login': (_) => LoginScreen(logo: _logo),
-            '/dashboard': (_) => DashboardScreen(),
+            '/dashboard': (_) => const DashboardScreen(),
+            '/tags': (_) => const TagsScreen(),
           },
         ));
   }

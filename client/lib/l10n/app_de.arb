@@ -62,6 +62,34 @@
   "@screenLoginFeedbackBadCredentials": {
     "description": "Feedback to the user when the user has given bad credentials"
   },
+  "screenTagsTitle": "Kategorien",
+  "@screenTagsTitle": {
+    "description": "Title of the tags screen"
+  },
+  "screenTagsDialogsAddTitle": "Neue Kategorie anlegen",
+  "@screenTagsDialogsAddTitle": {
+    "description": "Title of the dialog shown on tag creation"
+  },
+  "screenTagsDialogsAddDefaultTagTitle": "Neue Kategorie",
+  "@screenTagsDialogsAddDefaultTagTitle": {
+    "description": "Default title of anew tag"
+  },
+  "screenTagsDialogsAddContentFieldLabelColor": "Farbe",
+  "@screenTagsDialogsAddContentFieldLabelColor": {
+    "description": "Label of the color field in tag creation dialog"
+  },
+  "screenTagsDialogsAddContentFieldLabelTitle": "Bezeichnung",
+  "@screenTagsDialogsAddContentFieldLabelTitle": {
+    "description": "Label of the title field in tag creation dialog"
+  },
+  "screenTagsDialogsAddContentColorDialogTitle": "Farbe wählen",
+  "@screenTagsDialogsAddContentColorDialogTitle": {
+    "description": "Title of the color picker dialog in tag creation dialog"
+  },
+  "screenTagsDialogsAddContentColorDialogActionsOk": "Kategorie anlegen",
+  "@screenTagsDialogsAddContentColorDialogActionsOk": {
+    "description": "Label of the primary action in the color picker dialog in tag creation dialog"
+  },
   "screenTransactionsTitle": "Ausgaben {account}",
   "@screenTransactionsTitle": {
     "description": "Title of the transactions screen",

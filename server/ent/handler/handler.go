@@ -19,6 +19,8 @@ import (
 	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
+
+	server "skeleton"
 )
 
 // Shared handler.
@@ -406,10 +408,9 @@ func NewTagHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *Ta
 
 // struct to bind the post body to.
 type tagCreateRequest struct {
-	Title        string `json:"title,omitempty" `
-	Description  string `json:"description,omitempty" `
-	Color        uint32 `json:"color,omitempty" `
-	Transactions []int  `json:"transactions,omitempty" `
+	Title        string       `json:"title,omitempty" `
+	Color        server.Color `json:"color,omitempty" `
+	Transactions []int        `json:"transactions,omitempty" `
 }
 
 // This function creates a new Tag model and stores it in the database.
@@ -438,7 +439,6 @@ func (h TagHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// Save the data.
 	b := h.client.Tag.Create().
 		SetTitle(d.Title).
-		SetDescription(d.Description).
 		SetColor(d.Color).
 		AddTransactionIDs(d.Transactions...)
 
@@ -504,10 +504,9 @@ func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type tagUpdateRequest struct {
-	Title        string `json:"title,omitempty" `
-	Description  string `json:"description,omitempty" `
-	Color        uint32 `json:"color,omitempty" `
-	Transactions []int  `json:"transactions,omitempty" `
+	Title        string       `json:"title,omitempty" `
+	Color        server.Color `json:"color,omitempty" `
+	Transactions []int        `json:"transactions,omitempty" `
 }
 
 // This function updates a given Tag model and saves the changes in the database.
@@ -541,7 +540,6 @@ func (h TagHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Save the data.
 	b := h.client.Tag.UpdateOneID(id).
 		SetTitle(d.Title).
-		SetDescription(d.Description).
 		SetColor(d.Color).
 		AddTransactionIDs(d.Transactions...)
 
@@ -584,10 +582,6 @@ func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("title"); f != "" {
 		q.Where(tag.Title(f))
-	}
-
-	if f := r.URL.Query().Get("description"); f != "" {
-		q.Where(tag.Description(f))
 	}
 
 	if f := r.URL.Query().Get("color"); f != "" {
@@ -1015,10 +1009,6 @@ func (h TransactionHandler) Tags(w http.ResponseWriter, r *http.Request) {
 	// Use the query parameters to filter the query. todo - nested filter?
 	if f := r.URL.Query().Get("title"); f != "" {
 		q.Where(tag.Title(f))
-	}
-
-	if f := r.URL.Query().Get("description"); f != "" {
-		q.Where(tag.Description(f))
 	}
 
 	if f := r.URL.Query().Get("color"); f != "" {

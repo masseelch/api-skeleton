@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 
@@ -26,23 +27,9 @@ func (tc *TagCreate) SetTitle(s string) *TagCreate {
 	return tc
 }
 
-// SetDescription sets the description field.
-func (tc *TagCreate) SetDescription(s string) *TagCreate {
-	tc.mutation.SetDescription(s)
-	return tc
-}
-
-// SetNillableDescription sets the description field if the given value is not nil.
-func (tc *TagCreate) SetNillableDescription(s *string) *TagCreate {
-	if s != nil {
-		tc.SetDescription(*s)
-	}
-	return tc
-}
-
 // SetColor sets the color field.
-func (tc *TagCreate) SetColor(u uint32) *TagCreate {
-	tc.mutation.SetColor(u)
+func (tc *TagCreate) SetColor(s server.Color) *TagCreate {
+	tc.mutation.SetColor(s)
 	return tc
 }
 
@@ -164,14 +151,6 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 			Column: tag.FieldTitle,
 		})
 		_node.Title = value
-	}
-	if value, ok := tc.mutation.Description(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tag.FieldDescription,
-		})
-		_node.Description = value
 	}
 	if value, ok := tc.mutation.Color(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

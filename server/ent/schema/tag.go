@@ -6,6 +6,7 @@ import (
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
 	"github.com/masseelch/elk"
+	server "skeleton"
 	"skeleton/ent/tag"
 )
 
@@ -18,14 +19,12 @@ type Tag struct {
 func (Tag) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("id").
-			StructTag(`groups:"tag:list"`),
+			StructTag(`groups:"tag:list,tag:read"`),
 		field.String("title").
-			StructTag(`groups:"tag:list"`),
-		field.Text("description").
-			Optional().
-			StructTag(`groups:"tag:list"`),
+			StructTag(`groups:"tag:list,tag:read"`),
 		field.Uint32("color").
-			StructTag(`groups:"tag:list"`),
+			GoType(server.Color(0)).
+			StructTag(`groups:"tag:list,tag:read"`),
 	}
 }
 

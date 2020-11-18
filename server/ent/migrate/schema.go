@@ -46,7 +46,6 @@ var (
 	TagsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "title", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "color", Type: field.TypeUint32},
 	}
 	// TagsTable holds the schema information for the "tags" table.

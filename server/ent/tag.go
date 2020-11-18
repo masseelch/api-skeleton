@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/tag"
 
 	"github.com/facebook/ent/dialect/sql"
@@ -13,13 +14,11 @@ import (
 type Tag struct {
 	config `groups:"-" json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty" groups:"tag:list"`
+	ID int `json:"id,omitempty" groups:"tag:list,tag:read"`
 	// Title holds the value of the "title" field.
-	Title string `json:"title,omitempty" groups:"tag:list"`
-	// Description holds the value of the "description" field.
-	Description string `json:"description,omitempty" groups:"tag:list"`
+	Title string `json:"title,omitempty" groups:"tag:list,tag:read"`
 	// Color holds the value of the "color" field.
-	Color uint32 `json:"color,omitempty" groups:"tag:list"`
+	Color server.Color `json:"color,omitempty" groups:"tag:list,tag:read"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TagQuery when eager-loading is set.
 	Edges TagEdges `json:"edges"`
@@ -48,7 +47,6 @@ func (*Tag) scanValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{},  // id
 		&sql.NullString{}, // title
-		&sql.NullString{}, // description
 		&sql.NullInt64{},  // color
 	}
 }
@@ -70,15 +68,10 @@ func (t *Tag) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		t.Title = value.String
 	}
-	if value, ok := values[1].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field description", values[1])
+	if value, ok := values[1].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field color", values[1])
 	} else if value.Valid {
-		t.Description = value.String
-	}
-	if value, ok := values[2].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field color", values[2])
-	} else if value.Valid {
-		t.Color = uint32(value.Int64)
+		t.Color = server.Color(value.Int64)
 	}
 	return nil
 }

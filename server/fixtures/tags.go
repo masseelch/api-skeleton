@@ -2,8 +2,10 @@ package fixtures
 
 import (
 	"context"
+	"fmt"
 	"github.com/Pallinder/go-randomdata"
 	"math/rand"
+	server "skeleton"
 	"skeleton/ent"
 )
 
@@ -46,9 +48,8 @@ func tags(refs refs, c *ent.Client) error {
 	b := make([]*ent.TagCreate, tagCount)
 	for i := 0; i < tagCount; i++ {
 		b[i] = c.Tag.Create().
-			SetTitle(randomdata.Noun()).
-			SetDescription(randomdata.Paragraph()).
-			SetColor(colors[i])
+			SetTitle(fmt.Sprintf("%s %s", randomdata.Adjective(), randomdata.Noun())).
+			SetColor(server.Color(colors[i]))
 	}
 
 	var err error

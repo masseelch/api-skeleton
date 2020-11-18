@@ -1,0 +1,14 @@
+ent:
+  source: ./schema
+
+handler:
+  source: ./schema
+
+flutter:
+  source: ./schema
+  target: ../../client/lib/generated/
+  type_mappings:
+    - go: server.Color
+      dart: Color
+      import: dart:ui
+      converter: ../../utils/json_converter.dart

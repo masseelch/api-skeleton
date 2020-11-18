@@ -14,6 +14,8 @@ import '../widgets/progress_indicators.dart';
 import 'transactions.dart';
 
 class DashboardScreen extends StatefulWidget {
+  const DashboardScreen();
+
   @override
   _DashboardScreenState createState() => _DashboardScreenState();
 }

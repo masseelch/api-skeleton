@@ -8,6 +8,7 @@ import '../generated/model/transaction.dart';
 import '../generated/model/user.dart';
 import '../widgets/money.dart';
 import '../widgets/progress_indicators.dart';
+import '../widgets/tag_display.dart';
 
 class TransactionsScreen extends StatefulWidget {
   TransactionsScreen({@required this.account}) : assert(account != null);
@@ -89,11 +90,7 @@ class _Entry extends StatelessWidget {
             children: [
               Wrap(
                 children: transaction.edges.tags
-                    .map((tag) => Chip(
-                          backgroundColor: Color(tag.color),
-                          label: Text(tag.title),
-                          padding: const EdgeInsets.all(2),
-                        ))
+                    .map((tag) => TagDisplay(tag: tag))
                     .toList(),
                 spacing: 5,
               ),

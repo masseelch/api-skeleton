@@ -2,7 +2,7 @@
 Copyright © 2020 MasseElch <info@masseelch.de>
 
 */
-package cmd
+package main
 
 import (
 	"fmt"
@@ -21,8 +21,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
-
-const dateRegex = "\\d\\d\\d\\d-\\d\\d-\\d\\d"
 
 // migrateCmd represents the migrate command
 var serveCmd = &cobra.Command{
@@ -81,8 +79,8 @@ var serveCmd = &cobra.Command{
 			// Accounts
 			r.Mount("/accounts", handler.NewAccountHandler(c, v, l))
 
-			// Transactions
-			// r.Mount("/accounts", handler.NewAccountHandler(c, v, l))
+			// Tags
+			r.Mount("/tags", handler.NewTagHandler(c, v, l))
 		})
 
 		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", p), r))

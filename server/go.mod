@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/liip/sheriff v0.9.0
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/masseelch/elk v0.0.0-20201116225549-bda54f74d493
+	github.com/masseelch/elk v0.0.0-20201118125549-0d8b9a2586d9
 	github.com/masseelch/go-token v1.0.1
 	github.com/masseelch/render v1.0.1
 	github.com/mattn/go-sqlite3 v1.14.4
@@ -26,8 +26,9 @@ require (
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/crypto v0.0.0-20201116153603-4be66e5b6582
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
-	golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48 // indirect
+	golang.org/x/sys v0.0.0-20201117222635-ba5294a509c7 // indirect
 	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/tools v0.0.0-20201118030313-598b068a9102 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

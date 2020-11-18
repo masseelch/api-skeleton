@@ -8,7 +8,7 @@ part of 'session.dart';
 
 Session _$SessionFromJson(Map<String, dynamic> json) {
   return Session()
-    ..id = json['id'] as String
+    ..id = json['id']
     ..idleTimeExpiredAt = json['idleTimeExpiredAt'] == null
         ? null
         : DateTime.parse(json['idleTimeExpiredAt'] as String)

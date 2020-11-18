@@ -9,8 +9,6 @@ const (
 	FieldID = "id"
 	// FieldTitle holds the string denoting the title field in the database.
 	FieldTitle = "title"
-	// FieldDescription holds the string denoting the description field in the database.
-	FieldDescription = "description"
 	// FieldColor holds the string denoting the color field in the database.
 	FieldColor = "color"
 
@@ -30,7 +28,6 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldTitle,
-	FieldDescription,
 	FieldColor,
 }
 

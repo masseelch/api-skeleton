@@ -10,8 +10,7 @@ Tag _$TagFromJson(Map<String, dynamic> json) {
   return Tag()
     ..id = json['id'] as int
     ..title = json['title'] as String
-    ..description = json['description'] as String
-    ..color = json['color'] as int
+    ..color = const ColorConverter().fromJson(json['color'] as int)
     ..edges = json['edges'] == null
         ? null
         : TagEdges.fromJson(json['edges'] as Map<String, dynamic>);
@@ -20,8 +19,7 @@ Tag _$TagFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$TagToJson(Tag instance) => <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
-      'description': instance.description,
-      'color': instance.color,
+      'color': const ColorConverter().toJson(instance.color),
       'edges': instance.edges?.toJson(),
     };
 

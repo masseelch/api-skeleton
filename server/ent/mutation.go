@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/account"
 	"skeleton/ent/predicate"
 	"skeleton/ent/session"
@@ -940,9 +941,8 @@ type TagMutation struct {
 	typ                 string
 	id                  *int
 	title               *string
-	description         *string
-	color               *uint32
-	addcolor            *uint32
+	color               *server.Color
+	addcolor            *server.Color
 	clearedFields       map[string]struct{}
 	transactions        map[int]struct{}
 	removedtransactions map[int]struct{}
@@ -1074,64 +1074,14 @@ func (m *TagMutation) ResetTitle() {
 	m.title = nil
 }
 
-// SetDescription sets the description field.
-func (m *TagMutation) SetDescription(s string) {
-	m.description = &s
-}
-
-// Description returns the description value in the mutation.
-func (m *TagMutation) Description() (r string, exists bool) {
-	v := m.description
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDescription returns the old description value of the Tag.
-// If the Tag object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *TagMutation) OldDescription(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldDescription is allowed only on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldDescription requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
-	}
-	return oldValue.Description, nil
-}
-
-// ClearDescription clears the value of description.
-func (m *TagMutation) ClearDescription() {
-	m.description = nil
-	m.clearedFields[tag.FieldDescription] = struct{}{}
-}
-
-// DescriptionCleared returns if the field description was cleared in this mutation.
-func (m *TagMutation) DescriptionCleared() bool {
-	_, ok := m.clearedFields[tag.FieldDescription]
-	return ok
-}
-
-// ResetDescription reset all changes of the "description" field.
-func (m *TagMutation) ResetDescription() {
-	m.description = nil
-	delete(m.clearedFields, tag.FieldDescription)
-}
-
 // SetColor sets the color field.
-func (m *TagMutation) SetColor(u uint32) {
-	m.color = &u
+func (m *TagMutation) SetColor(s server.Color) {
+	m.color = &s
 	m.addcolor = nil
 }
 
 // Color returns the color value in the mutation.
-func (m *TagMutation) Color() (r uint32, exists bool) {
+func (m *TagMutation) Color() (r server.Color, exists bool) {
 	v := m.color
 	if v == nil {
 		return
@@ -1143,7 +1093,7 @@ func (m *TagMutation) Color() (r uint32, exists bool) {
 // If the Tag object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *TagMutation) OldColor(ctx context.Context) (v uint32, err error) {
+func (m *TagMutation) OldColor(ctx context.Context) (v server.Color, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldColor is allowed only on UpdateOne operations")
 	}
@@ -1157,17 +1107,17 @@ func (m *TagMutation) OldColor(ctx context.Context) (v uint32, err error) {
 	return oldValue.Color, nil
 }
 
-// AddColor adds u to color.
-func (m *TagMutation) AddColor(u uint32) {
+// AddColor adds s to color.
+func (m *TagMutation) AddColor(s server.Color) {
 	if m.addcolor != nil {
-		*m.addcolor += u
+		*m.addcolor += s
 	} else {
-		m.addcolor = &u
+		m.addcolor = &s
 	}
 }
 
 // AddedColor returns the value that was added to the color field in this mutation.
-func (m *TagMutation) AddedColor() (r uint32, exists bool) {
+func (m *TagMutation) AddedColor() (r server.Color, exists bool) {
 	v := m.addcolor
 	if v == nil {
 		return
@@ -1248,12 +1198,9 @@ func (m *TagMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *TagMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 2)
 	if m.title != nil {
 		fields = append(fields, tag.FieldTitle)
-	}
-	if m.description != nil {
-		fields = append(fields, tag.FieldDescription)
 	}
 	if m.color != nil {
 		fields = append(fields, tag.FieldColor)
@@ -1268,8 +1215,6 @@ func (m *TagMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case tag.FieldTitle:
 		return m.Title()
-	case tag.FieldDescription:
-		return m.Description()
 	case tag.FieldColor:
 		return m.Color()
 	}
@@ -1283,8 +1228,6 @@ func (m *TagMutation) OldField(ctx context.Context, name string) (ent.Value, err
 	switch name {
 	case tag.FieldTitle:
 		return m.OldTitle(ctx)
-	case tag.FieldDescription:
-		return m.OldDescription(ctx)
 	case tag.FieldColor:
 		return m.OldColor(ctx)
 	}
@@ -1303,15 +1246,8 @@ func (m *TagMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetTitle(v)
 		return nil
-	case tag.FieldDescription:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetDescription(v)
-		return nil
 	case tag.FieldColor:
-		v, ok := value.(uint32)
+		v, ok := value.(server.Color)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1348,7 +1284,7 @@ func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
 func (m *TagMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case tag.FieldColor:
-		v, ok := value.(uint32)
+		v, ok := value.(server.Color)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1361,11 +1297,7 @@ func (m *TagMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared
 // during this mutation.
 func (m *TagMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(tag.FieldDescription) {
-		fields = append(fields, tag.FieldDescription)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicates if this field was
@@ -1378,11 +1310,6 @@ func (m *TagMutation) FieldCleared(name string) bool {
 // ClearField clears the value for the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *TagMutation) ClearField(name string) error {
-	switch name {
-	case tag.FieldDescription:
-		m.ClearDescription()
-		return nil
-	}
 	return fmt.Errorf("unknown Tag nullable field %s", name)
 }
 
@@ -1393,9 +1320,6 @@ func (m *TagMutation) ResetField(name string) error {
 	switch name {
 	case tag.FieldTitle:
 		m.ResetTitle()
-		return nil
-	case tag.FieldDescription:
-		m.ResetDescription()
 		return nil
 	case tag.FieldColor:
 		m.ResetColor()

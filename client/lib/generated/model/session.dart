@@ -1,6 +1,9 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:json_annotation/json_annotation.dart';
 
+import 'dart:ui';
+import '../../utils/json_converter.dart';
+
 import '../model/user.dart';
 
 part 'session.g.dart';
@@ -9,7 +12,7 @@ part 'session.g.dart';
 class Session {
   Session();
 
-  String id;
+  dynamic id;
   DateTime idleTimeExpiredAt;
   DateTime lifeTimeExpiredAt;
 

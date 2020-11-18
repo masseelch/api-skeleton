@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/predicate"
 	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
@@ -33,36 +34,16 @@ func (tu *TagUpdate) SetTitle(s string) *TagUpdate {
 	return tu
 }
 
-// SetDescription sets the description field.
-func (tu *TagUpdate) SetDescription(s string) *TagUpdate {
-	tu.mutation.SetDescription(s)
-	return tu
-}
-
-// SetNillableDescription sets the description field if the given value is not nil.
-func (tu *TagUpdate) SetNillableDescription(s *string) *TagUpdate {
-	if s != nil {
-		tu.SetDescription(*s)
-	}
-	return tu
-}
-
-// ClearDescription clears the value of description.
-func (tu *TagUpdate) ClearDescription() *TagUpdate {
-	tu.mutation.ClearDescription()
-	return tu
-}
-
 // SetColor sets the color field.
-func (tu *TagUpdate) SetColor(u uint32) *TagUpdate {
+func (tu *TagUpdate) SetColor(s server.Color) *TagUpdate {
 	tu.mutation.ResetColor()
-	tu.mutation.SetColor(u)
+	tu.mutation.SetColor(s)
 	return tu
 }
 
-// AddColor adds u to color.
-func (tu *TagUpdate) AddColor(u uint32) *TagUpdate {
-	tu.mutation.AddColor(u)
+// AddColor adds s to color.
+func (tu *TagUpdate) AddColor(s server.Color) *TagUpdate {
+	tu.mutation.AddColor(s)
 	return tu
 }
 
@@ -183,19 +164,6 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: tag.FieldTitle,
 		})
 	}
-	if value, ok := tu.mutation.Description(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tag.FieldDescription,
-		})
-	}
-	if tu.mutation.DescriptionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tag.FieldDescription,
-		})
-	}
 	if value, ok := tu.mutation.Color(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeUint32,
@@ -288,36 +256,16 @@ func (tuo *TagUpdateOne) SetTitle(s string) *TagUpdateOne {
 	return tuo
 }
 
-// SetDescription sets the description field.
-func (tuo *TagUpdateOne) SetDescription(s string) *TagUpdateOne {
-	tuo.mutation.SetDescription(s)
-	return tuo
-}
-
-// SetNillableDescription sets the description field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableDescription(s *string) *TagUpdateOne {
-	if s != nil {
-		tuo.SetDescription(*s)
-	}
-	return tuo
-}
-
-// ClearDescription clears the value of description.
-func (tuo *TagUpdateOne) ClearDescription() *TagUpdateOne {
-	tuo.mutation.ClearDescription()
-	return tuo
-}
-
 // SetColor sets the color field.
-func (tuo *TagUpdateOne) SetColor(u uint32) *TagUpdateOne {
+func (tuo *TagUpdateOne) SetColor(s server.Color) *TagUpdateOne {
 	tuo.mutation.ResetColor()
-	tuo.mutation.SetColor(u)
+	tuo.mutation.SetColor(s)
 	return tuo
 }
 
-// AddColor adds u to color.
-func (tuo *TagUpdateOne) AddColor(u uint32) *TagUpdateOne {
-	tuo.mutation.AddColor(u)
+// AddColor adds s to color.
+func (tuo *TagUpdateOne) AddColor(s server.Color) *TagUpdateOne {
+	tuo.mutation.AddColor(s)
 	return tuo
 }
 
@@ -434,19 +382,6 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: tag.FieldTitle,
-		})
-	}
-	if value, ok := tuo.mutation.Description(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tag.FieldDescription,
-		})
-	}
-	if tuo.mutation.DescriptionCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tag.FieldDescription,
 		})
 	}
 	if value, ok := tuo.mutation.Color(); ok {

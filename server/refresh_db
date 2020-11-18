@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-go run main.go db clear --force
-go run main.go db migrate --force
-go run main.go db fixtures
+go run ./cmd db clear --force
+go run ./cmd db migrate --force
+go run ./cmd db fixtures

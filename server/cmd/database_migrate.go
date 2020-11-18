@@ -2,7 +2,7 @@
 Copyright © 2020 MasseElch <info@masseelch.de>
 
 */
-package cmd
+package main
 
 import (
 	"context"

@@ -1,6 +1,9 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:json_annotation/json_annotation.dart';
 
+import 'dart:ui';
+import '../../utils/json_converter.dart';
+
 import '../model/transaction.dart';
 
 part 'tag.g.dart';
@@ -11,8 +14,8 @@ class Tag {
 
   int id;
   String title;
-  String description;
-  int color;
+  @ColorConverter()
+  Color color;
 
   TagEdges edges;
 
