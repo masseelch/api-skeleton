@@ -6,7 +6,31 @@
   },
   "appActionOK": "OK",
   "@appActionOK": {
-    "description": "Default label of an OK action"
+    "description": "Default label of an 'OK' action"
+  },
+  "appActionSaveChanges": "Änderungen speichern",
+  "@appActionSaveChanges": {
+    "description": "Default label of an 'Save Changes' action"
+  },
+  "appActionRetry": "Erneut versuchen",
+  "@appActionRetry": {
+    "description": "Default label of an 'Retry' action"
+  },
+  "appErrorApi401DialogTitle": "Sitzung abgelaufen",
+  "@appErrorApi401DialogTitle": {
+    "description": "Default title of the general 401 feedback dialog"
+  },
+  "appErrorApi401DialogContent": "Die aktuelle Sitzung is abgelaufen. Bitte logge dich erneut ein.",
+  "@appErrorApi401DialogContent": {
+    "description": "Default content of the general 401 feedback dialog"
+  },
+  "appErrorNetworkDialogTitle": "Hoppla ...",
+  "@appErrorNetworkDialogTitle": {
+    "description": "Default title of the general network error feedback dialog"
+  },
+  "appErrorNetworkDialogContent": "Der Server konnte nicht erreicht werden. Bitte überprüfe deine Netzwerkverbindung versuche es später erneut.",
+  "@appErrorNetworkDialogContent": {
+    "description": "Default content of the general network error feedback dialog"
   },
   "dialogFeedbackTitle": "Hoppla ...",
   "@dialogFeedbackTitle": {
@@ -19,6 +43,17 @@
   "dialogLoadingContent": "Bitte warten ...",
   "@dialogLoadingContent": {
     "description": "Default text on a loading spinner dialog"
+  },
+  "formDatePickerDateFormat": "{date}",
+  "@formDatePickerDateFormat": {
+    "description": "Default date format in date picker form field",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMd",
+        "example": "01.02.2003"
+      }
+    }
   },
   "snackbarErrorContent": "Es ist unerwartet ein Fehler aufgetreten.",
   "@snackbarErrorContent": {
@@ -33,7 +68,8 @@
     "description": "Header above the accounts accumulated expenses for the given month",
     "placeholders": {
       "month": {
-        "type": "String",
+        "type": "DateTime",
+        "format": "MMMM",
         "example": "Januar"
       }
     }
@@ -66,29 +102,45 @@
   "@screenTagsTitle": {
     "description": "Title of the tags screen"
   },
-  "screenTagsDialogsAddTitle": "Neue Kategorie anlegen",
-  "@screenTagsDialogsAddTitle": {
+  "screenTagsDefaultTagTitle": "Neue Kategorie",
+  "@screenTagsDefaultTagTitle": {
+    "description": "Default title of a new tag"
+  },
+  "screenTagsDialogsEditTagTitleAdd": "Neue Kategorie",
+  "@screenTagsDialogsEditTagTitleAdd": {
     "description": "Title of the dialog shown on tag creation"
   },
-  "screenTagsDialogsAddDefaultTagTitle": "Neue Kategorie",
-  "@screenTagsDialogsAddDefaultTagTitle": {
-    "description": "Default title of anew tag"
+  "screenTagsDialogsEditTagTitleEdit": "Kategorie bearbeiten",
+  "@screenTagsDialogsEditTagTitleEdit": {
+    "description": "Title of the dialog shown on tag editing"
   },
-  "screenTagsDialogsAddContentFieldLabelColor": "Farbe",
-  "@screenTagsDialogsAddContentFieldLabelColor": {
+  "screenTagsDialogsEditTagContentFieldLabelColor": "Farbe",
+  "@screenTagsDialogsEditTagContentFieldLabelColor": {
     "description": "Label of the color field in tag creation dialog"
   },
-  "screenTagsDialogsAddContentFieldLabelTitle": "Bezeichnung",
-  "@screenTagsDialogsAddContentFieldLabelTitle": {
+  "screenTagsDialogsEditTagContentFieldLabelTitle": "Bezeichnung",
+  "@screenTagsDialogsEditTagContentFieldLabelTitle": {
     "description": "Label of the title field in tag creation dialog"
   },
-  "screenTagsDialogsAddContentColorDialogTitle": "Farbe wählen",
-  "@screenTagsDialogsAddContentColorDialogTitle": {
+  "screenTagsDialogsEditTagContentColorDialogTitle": "Farbe wählen",
+  "@screenTagsDialogsEditTagContentColorDialogTitle": {
     "description": "Title of the color picker dialog in tag creation dialog"
   },
-  "screenTagsDialogsAddContentColorDialogActionsOk": "Kategorie anlegen",
-  "@screenTagsDialogsAddContentColorDialogActionsOk": {
+  "screenTagsDialogsEditTagContentColorDialogActionsOk": "Kategorie anlegen",
+  "@screenTagsDialogsEditTagContentColorDialogActionsOk": {
     "description": "Label of the primary action in the color picker dialog in tag creation dialog"
+  },
+  "screenTransactionTitleAdd": "Transaktion eintragen",
+  "@screenTransactionTitleAdd": {
+    "description": "Title of the transactions add screen"
+  },
+  "screenTransactionTitleEdit": "Transaktion bearbeiten",
+  "@screenTransactionTitleEdit": {
+    "description": "Title of the transactions edit screen"
+  },
+  "screenTransactionFormDateError": "Datum im Format tt.mm.yyyy angeben",
+  "@screenTransactionFormDateError": {
+    "description": "Label of the date form field in transaction screen"
   },
   "screenTransactionsTitle": "Ausgaben {account}",
   "@screenTransactionsTitle": {
@@ -105,7 +157,8 @@
     "description": "Who did create this transaction and when",
     "placeholders": {
       "date": {
-        "type": "String",
+        "type": "DateTime",
+        "format": "yMMMMEEEEd",
         "example": "01.02.2003"
       },
       "name": {

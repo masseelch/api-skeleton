@@ -1,11 +1,17 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:ui';
+import '../../utils/json_converter.dart';
 
 import '../model/tag.dart';
 import '../model/transaction.dart';
 import '../client/transaction.dart';
+
+part 'tag.g.dart';
 
 const tagUrl = 'tags';
 
@@ -52,13 +58,13 @@ class TagClient {
     return (r.data as List).map((i) => Tag.fromJson(i)).toList();
   }
 
-  Future<Tag> create(Tag e) async {
-    final r = await dio.post('/$tagUrl', data: e.toJson());
+  Future<Tag> create(TagCreateRequest req) async {
+    final r = await dio.post('/$tagUrl', data: req.toJson());
     return (Tag.fromJson(r.data));
   }
 
-  Future<Tag> update(Tag e) async {
-    final r = await dio.patch('/$tagUrl', data: e.toJson());
+  Future<Tag> update(TagUpdateRequest req) async {
+    final r = await dio.patch('/$tagUrl/${req.id}', data: req.toJson());
     return (Tag.fromJson(r.data));
   }
 
@@ -69,4 +75,49 @@ class TagClient {
 
   static TagClient of(BuildContext context) =>
       Provider.of<TagClient>(context, listen: false);
+}
+
+@JsonSerializable(createFactory: false)
+class TagCreateRequest {
+  TagCreateRequest({
+    this.title,
+    this.color,
+    this.transactions,
+  });
+
+  TagCreateRequest.fromTag(Tag e)
+      : title = e.title,
+        color = e.color,
+        transactions = e.edges.transactions;
+
+  String title;
+  @ColorConverter()
+  Color color;
+  List<Transaction> transactions;
+
+  Map<String, dynamic> toJson() => _$TagCreateRequestToJson(this);
+}
+
+@JsonSerializable(createFactory: false)
+class TagUpdateRequest {
+  TagUpdateRequest({
+    this.id,
+    this.title,
+    this.color,
+    this.transactions,
+  });
+
+  TagUpdateRequest.fromTag(Tag e)
+      : id = e.id,
+        title = e.title,
+        color = e.color,
+        transactions = e.edges.transactions;
+
+  int id;
+  String title;
+  @ColorConverter()
+  Color color;
+  List<Transaction> transactions;
+
+  Map<String, dynamic> toJson() => _$TagUpdateRequestToJson(this);
 }

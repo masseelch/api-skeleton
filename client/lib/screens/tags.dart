@@ -57,7 +57,7 @@ class _TagsScreenState extends State<TagsScreen> {
             context: context,
             builder: (_) => _EditTagDialog(
               tag: Tag()
-                ..title = t.screenTagsDialogsAddDefaultTagTitle
+                ..title = t.screenTagsDefaultTagTitle
                 ..color = theme.accentColor,
             ),
           );
@@ -78,7 +78,24 @@ class _TagsScreenState extends State<TagsScreen> {
           padding: const EdgeInsets.only(top: 12, left: 12),
           child: Align(
             alignment: Alignment.topLeft,
-            child: TagDisplay(tag: _tags[index]),
+            child: TagDisplay(
+              tag: _tags[index],
+              onTap: () async {
+                final tag = await showDialog<Tag>(
+                  context: context,
+                  builder: (_) => _EditTagDialog(tag: _tags[index]),
+                );
+
+                if (tag != null) {
+                  setState(() {
+                    _tags[index] = tag;
+                    _tags.sort((t1, t2) => t1.title.toLowerCase().compareTo(
+                          t2.title.toLowerCase(),
+                        ));
+                  });
+                }
+              },
+            ),
           ),
         ),
       ),
@@ -96,22 +113,23 @@ class _EditTagDialog extends StatefulWidget {
 }
 
 class _EditTagDialogState extends State<_EditTagDialog> {
-  final _focusScopeNode = FocusScopeNode();
+  final _titleFocusNode = FocusNode();
   TextEditingController _titleController;
 
   Tag _tag;
 
   @override
   void initState() {
-    _tag = widget.tag;
-
-    _titleController = TextEditingController(text: _tag.title);
     super.initState();
+
+    _tag = widget.tag;
+    _titleController = TextEditingController(text: _tag.title);
+    _titleFocusNode.requestFocus();
   }
 
   @override
   void dispose() {
-    _focusScopeNode.dispose();
+    _titleFocusNode.dispose();
     _titleController.dispose();
     super.dispose();
   }
@@ -121,15 +139,28 @@ class _EditTagDialogState extends State<_EditTagDialog> {
     final t = AppLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(t.screenTagsDialogsAddTitle),
+      title: Text(
+        _tag.id == null
+            ? t.screenTagsDialogsEditTagTitleAdd
+            : t.screenTagsDialogsEditTagTitleEdit,
+      ),
       actions: [
         FlatButton(
-          child: Text(t.screenTagsDialogsAddContentColorDialogActionsOk),
+          child: Text(
+            _tag.id == null
+                ? t.screenTagsDialogsEditTagContentColorDialogActionsOk
+                : t.appActionSaveChanges,
+          ),
           onPressed: () async {
             showLoadingDialog(context);
 
             try {
-              final tag = await TagClient.of(context).create(_tag);
+              Tag tag;
+              if (_tag.id == null) {
+                tag = await TagClient.of(context).create(TagCreateRequest.fromTag(_tag));
+              } else {
+                tag = await TagClient.of(context).update(TagUpdateRequest.fromTag(_tag));
+              }
 
               Navigator.pop(context);
               Navigator.pop(context, tag);
@@ -141,53 +172,50 @@ class _EditTagDialogState extends State<_EditTagDialog> {
           },
         ),
       ],
-      content: FocusScope(
-        node: _focusScopeNode,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              autofocus: true,
-              controller: _titleController,
-              onChanged: (v) {
-                setState(() {
-                  _tag.title = v;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: t.screenTagsDialogsAddContentFieldLabelTitle,
-              ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            focusNode: _titleFocusNode,
+            controller: _titleController,
+            onChanged: (v) {
+              setState(() {
+                _tag.title = v;
+              });
+            },
+            decoration: InputDecoration(
+              labelText: t.screenTagsDialogsEditTagContentFieldLabelTitle,
             ),
-            const SizedBox(height: 16),
-            InputDecorator(
-              decoration: InputDecoration(
-                labelText: t.screenTagsDialogsAddContentFieldLabelColor,
-              ),
-              child: InkWell(
-                child: TagDisplay(tag: _tag),
-                onTap: () {
-                  _focusScopeNode.nextFocus();
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title:
-                          Text(t.screenTagsDialogsAddContentColorDialogTitle),
-                      content: BlockPicker(
-                        pickerColor: _tag.color,
-                        onColorChanged: (c) {
-                          setState(() {
-                            _tag.color = c;
-                          });
-                          Navigator.of(context).pop();
-                        },
-                      ),
+          ),
+          const SizedBox(height: 16),
+          InputDecorator(
+            decoration: InputDecoration(
+              labelText: t.screenTagsDialogsEditTagContentFieldLabelColor,
+            ),
+            child: InkWell(
+              child: TagDisplay(tag: _tag),
+              onTap: () {
+                _titleFocusNode.unfocus();
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title:
+                        Text(t.screenTagsDialogsEditTagContentColorDialogTitle),
+                    content: BlockPicker(
+                      pickerColor: _tag.color,
+                      onColorChanged: (c) {
+                        setState(() {
+                          _tag.color = c;
+                        });
+                        Navigator.of(context).pop();
+                      },
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

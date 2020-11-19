@@ -1,7 +1,11 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:ui';
+import '../../utils/json_converter.dart';
 
 import '../model/user.dart';
 import '../model/session.dart';
@@ -10,6 +14,8 @@ import '../model/account.dart';
 import '../client/account.dart';
 import '../model/transaction.dart';
 import '../client/transaction.dart';
+
+part 'user.g.dart';
 
 const userUrl = 'users';
 
@@ -71,13 +77,13 @@ class UserClient {
     return (r.data as List).map((i) => User.fromJson(i)).toList();
   }
 
-  Future<User> create(User e) async {
-    final r = await dio.post('/$userUrl', data: e.toJson());
+  Future<User> create(UserCreateRequest req) async {
+    final r = await dio.post('/$userUrl', data: req.toJson());
     return (User.fromJson(r.data));
   }
 
-  Future<User> update(User e) async {
-    final r = await dio.patch('/$userUrl', data: e.toJson());
+  Future<User> update(UserUpdateRequest req) async {
+    final r = await dio.patch('/$userUrl/${req.id}', data: req.toJson());
     return (User.fromJson(r.data));
   }
 
@@ -98,4 +104,59 @@ class UserClient {
 
   static UserClient of(BuildContext context) =>
       Provider.of<UserClient>(context, listen: false);
+}
+
+@JsonSerializable(createFactory: false)
+class UserCreateRequest {
+  UserCreateRequest({
+    this.email,
+    this.password,
+    this.enabled,
+    this.firstName,
+    this.lastName,
+  });
+
+  UserCreateRequest.fromUser(User e)
+      : email = e.email,
+        password = e.password,
+        enabled = e.enabled,
+        firstName = e.firstName,
+        lastName = e.lastName;
+
+  String email;
+  String password;
+  bool enabled;
+  String firstName;
+  String lastName;
+
+  Map<String, dynamic> toJson() => _$UserCreateRequestToJson(this);
+}
+
+@JsonSerializable(createFactory: false)
+class UserUpdateRequest {
+  UserUpdateRequest({
+    this.id,
+    this.email,
+    this.password,
+    this.enabled,
+    this.firstName,
+    this.lastName,
+  });
+
+  UserUpdateRequest.fromUser(User e)
+      : id = e.id,
+        email = e.email,
+        password = e.password,
+        enabled = e.enabled,
+        firstName = e.firstName,
+        lastName = e.lastName;
+
+  int id;
+  String email;
+  String password;
+  bool enabled;
+  String firstName;
+  String lastName;
+
+  Map<String, dynamic> toJson() => _$UserUpdateRequestToJson(this);
 }

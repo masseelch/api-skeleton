@@ -3,9 +3,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
+import '../client/user.dart';
 import '../model/session.dart';
 import '../model/user.dart';
-import '../client/user.dart';
 
 const sessionUrl = 'sessions';
 

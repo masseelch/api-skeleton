@@ -33,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+
     if (Config.of(context).isDev) {
       _email = 'user@api.com';
       _password = 'passw0rd!';
@@ -161,7 +162,8 @@ class _LoginScreenState extends State<LoginScreen> {
           r.data['token'],
           User.fromJson(r.data['edges']['user']),
         )) {
-          Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (_) => false);
+          Navigator.pushNamedAndRemoveUntil(
+              context, '/dashboard', (_) => false);
         } else {
           showErrorSnackBar(context, scaffold: _scaffoldKey.currentState);
           hideLoadingDialog(context);
@@ -171,7 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
         showErrorSnackBar(
           context,
           scaffold: _scaffoldKey.currentState,
-          content: AppLocalizations.of(context).screenLoginFeedbackBadCredentials,
+          content:
+              AppLocalizations.of(context).screenLoginFeedbackBadCredentials,
         );
         hideLoadingDialog(context);
       } finally {

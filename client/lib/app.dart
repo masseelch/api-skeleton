@@ -41,27 +41,7 @@ class _AppState extends State<App> {
     _addAuthorizationInterceptor();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tokenService.getToken().then((t) {
-        if (t != null) {
-          _dio.get('/auth/check').then((_) {
-            _addErrorsInterceptor();
-            _navigatorKey.currentState.pushReplacementNamed('/dashboard');
-          }).catchError((e) {
-            if (e is DioError) {
-              if (e.response?.statusCode == 401) {
-                // todo - remove token
-                _navigatorKey.currentState.pushReplacementNamed('/login');
-              } else {
-                // todo - handle this case
-              }
-            } else {
-              // todo - handle this case
-            }
-          });
-        } else {
-          _navigatorKey.currentState.pushReplacementNamed('/login');
-        }
-      });
+      _checkToken();
     });
   }
 
@@ -87,7 +67,6 @@ class _AppState extends State<App> {
         ],
         child: MaterialApp(
           navigatorKey: _navigatorKey,
-          title: 'Title',
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           theme: ThemeData(
             primarySwatch: Colors.teal,
@@ -138,10 +117,11 @@ class _AppState extends State<App> {
               case 401:
                 // Session has expired or account was disabled.
                 await showFeedbackDialog(
-                  _navigatorKey.currentState.overlay.context,
-                  title: 'Sitzung abgelaufen', //t.apiError401Title,
-                  content:
-                      'Die aktuelle Sitzung is abgelaufen. Bitte logge dich erneut ein.', // t.apiError401Content,
+                  _navigatorKey.currentContext,
+                  title: AppLocalizations.of(_navigatorKey.currentContext)
+                      .appErrorApi401DialogTitle,
+                  content: AppLocalizations.of(_navigatorKey.currentContext)
+                      .appErrorApi401DialogContent,
                 );
 
                 if (await _tokenService.logout()) {
@@ -166,5 +146,48 @@ class _AppState extends State<App> {
         }
       },
     ));
+  }
+
+  void _checkToken() {
+    _tokenService.getToken().then((token) {
+      if (token != null) {
+        _dio.get('/auth/check').then((_) {
+          _addErrorsInterceptor();
+          _navigatorKey.currentState.pushReplacementNamed('/dashboard');
+        }).catchError((e) {
+          if (e is DioError) {
+            if (e.response?.statusCode == 401) {
+              // todo - remove token
+              _navigatorKey.currentState.pushReplacementNamed('/login');
+            } else {
+              showDialog(
+                context: _navigatorKey.currentContext,
+                builder: (context) {
+                  final t = AppLocalizations.of(context);
+
+                  return AlertDialog(
+                    title: Text(t.appErrorNetworkDialogTitle),
+                    content: Text(t.appErrorNetworkDialogContent),
+                    actions: <Widget>[
+                      FlatButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _checkToken();
+                        },
+                        child: Text(t.appActionRetry),
+                      )
+                    ],
+                  );
+                },
+              );
+            }
+          } else {
+            // todo - handle this case
+          }
+        });
+      } else {
+        _navigatorKey.currentState.pushReplacementNamed('/login');
+      }
+    });
   }
 }

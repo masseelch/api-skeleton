@@ -1,6 +1,8 @@
-import 'package:client/services/token.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
+import '../screens/transaction.dart';
+import '../services/token.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer();
@@ -85,6 +87,14 @@ void _navigateNamed(BuildContext context, String name) {
   Navigator.pushNamedAndRemoveUntil(
     context,
     name,
+    (_) => false,
+  );
+}
+
+void _navigate(BuildContext context, WidgetBuilder builder) {
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: builder),
     (_) => false,
   );
 }

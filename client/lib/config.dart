@@ -8,8 +8,7 @@ class Config {
     @required this.env,
     @required this.baseUrl,
     this.bannerMessage,
-  })
-      : assert(env != null),
+  })  : assert(env != null),
         assert(baseUrl != null);
 
   final Environment env;

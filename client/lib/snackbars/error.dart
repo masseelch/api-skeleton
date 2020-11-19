@@ -11,7 +11,8 @@ void showErrorSnackBar(
   (Scaffold.of(context, nullOk: true) ?? scaffold).removeCurrentSnackBar();
   (Scaffold.of(context, nullOk: true) ?? scaffold).showSnackBar(
     SnackBar(
-      content: Text(content ?? AppLocalizations.of(context).snackbarErrorContent),
+      content:
+          Text(content ?? AppLocalizations.of(context).snackbarErrorContent),
       backgroundColor: Theme.of(context).errorColor,
     ),
   );

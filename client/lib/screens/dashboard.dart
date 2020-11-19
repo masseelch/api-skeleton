@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 import '../client/extensions.dart';
 import '../generated/client/account.dart';
 import '../generated/model/account.dart';
+import '../screens/transaction.dart';
 import '../services/token.dart';
 import '../utils/date_extensions.dart';
 import '../widgets/drawer.dart';
@@ -60,11 +60,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    final dateFormat = DateFormat.MMMM(t.localeName);
-
     return Scaffold(
       drawer: drawer,
       appBar: appBar,
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => TransactionScreen()),
+          );
+        },
+      ),
       body: FutureBuilder<List<Account>>(
         future: _accounts$,
         builder: (context, snapshot) {
@@ -79,9 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return ListView(
             children: [
-              ListHeader(t.screenDashboardListHeader(
-                dateFormat.format(_currentMonth),
-              )),
+              ListHeader(t.screenDashboardListHeader(_currentMonth)),
               ...ListTile.divideTiles(
                 context: context,
                 tiles: snapshot.data.map(
@@ -91,9 +96,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ),
-              ListHeader(t.screenDashboardListHeader(
-                dateFormat.format(_lastMonth),
-              )),
+              ListHeader(t.screenDashboardListHeader(_lastMonth)),
               ...ListTile.divideTiles(
                 context: context,
                 tiles: snapshot.data.map(

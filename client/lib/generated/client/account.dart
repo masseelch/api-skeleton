@@ -1,13 +1,19 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:ui';
+import '../../utils/json_converter.dart';
 
 import '../model/account.dart';
 import '../model/user.dart';
 import '../client/user.dart';
 import '../model/transaction.dart';
 import '../client/transaction.dart';
+
+part 'account.g.dart';
 
 const accountUrl = 'accounts';
 
@@ -49,13 +55,13 @@ class AccountClient {
     return (r.data as List).map((i) => Account.fromJson(i)).toList();
   }
 
-  Future<Account> create(Account e) async {
-    final r = await dio.post('/$accountUrl', data: e.toJson());
+  Future<Account> create(AccountCreateRequest req) async {
+    final r = await dio.post('/$accountUrl', data: req.toJson());
     return (Account.fromJson(r.data));
   }
 
-  Future<Account> update(Account e) async {
-    final r = await dio.patch('/$accountUrl', data: e.toJson());
+  Future<Account> update(AccountUpdateRequest req) async {
+    final r = await dio.patch('/$accountUrl/${req.id}', data: req.toJson());
     return (Account.fromJson(r.data));
   }
 
@@ -71,4 +77,47 @@ class AccountClient {
 
   static AccountClient of(BuildContext context) =>
       Provider.of<AccountClient>(context, listen: false);
+}
+
+@JsonSerializable(createFactory: false)
+class AccountCreateRequest {
+  AccountCreateRequest({
+    this.title,
+    this.users,
+    this.transactions,
+  });
+
+  AccountCreateRequest.fromAccount(Account e)
+      : title = e.title,
+        users = e.edges.users,
+        transactions = e.edges.transactions;
+
+  String title;
+  List<User> users;
+  List<Transaction> transactions;
+
+  Map<String, dynamic> toJson() => _$AccountCreateRequestToJson(this);
+}
+
+@JsonSerializable(createFactory: false)
+class AccountUpdateRequest {
+  AccountUpdateRequest({
+    this.id,
+    this.title,
+    this.users,
+    this.transactions,
+  });
+
+  AccountUpdateRequest.fromAccount(Account e)
+      : id = e.id,
+        title = e.title,
+        users = e.edges.users,
+        transactions = e.edges.transactions;
+
+  int id;
+  String title;
+  List<User> users;
+  List<Transaction> transactions;
+
+  Map<String, dynamic> toJson() => _$AccountUpdateRequestToJson(this);
 }

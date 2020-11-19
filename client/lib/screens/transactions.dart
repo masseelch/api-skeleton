@@ -1,6 +1,6 @@
+import 'package:client/screens/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 
 import '../generated/client/account.dart';
 import '../generated/model/account.dart';
@@ -32,18 +32,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(t.screenTransactionsTitle(widget.account.title)),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   backgroundColor: theme.primaryColor,
-      //   foregroundColor: theme.colorScheme.onPrimary,
-      //   child: Icon(Icons.add),
-      //   onPressed: () {
-      //     // do stuff
-      //   },
-      // ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: theme.primaryColor,
+        foregroundColor: theme.colorScheme.onPrimary,
+        child: Icon(Icons.add),
+        onPressed: () async {
+          final t = Navigator.push<Transaction>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => TransactionScreen(account: widget.account),
+            ),
+          );
+
+          if (t != null) {
+            // todo
+          }
+        },
+      ),
       body: FutureBuilder<List<Transaction>>(
         future: _transactions$,
         builder: (context, snapshot) {
@@ -78,7 +89,6 @@ class _Entry extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dateFormat = DateFormat.yMMMMEEEEd(t.localeName);
 
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -102,7 +112,7 @@ class _Entry extends StatelessWidget {
               const SizedBox(height: 5),
               Text(
                 t.screenTransactionsEntryCreator(
-                  dateFormat.format(transaction.date),
+                  transaction.date,
                   '${user.firstName} ${user.lastName}',
                 ),
                 style: theme.textTheme.caption,

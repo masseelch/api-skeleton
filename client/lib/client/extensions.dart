@@ -15,9 +15,11 @@ extension AccountClientExtension on AccountClient {
     assert(from != null);
     assert(to != null);
 
-    final r = await dio.get('/$userUrl/${user.id}/account-meta/${_formatDateTime(from)}/${_formatDateTime(to)}');
+    final r = await dio.get(
+        '/$userUrl/${user.id}/account-meta/${_formatDateTime(from)}/${_formatDateTime(to)}');
     return (r.data as List).map((i) => Account.fromJson(i)).toList();
   }
 }
 
-String _formatDateTime(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+String _formatDateTime(DateTime d) =>
+    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

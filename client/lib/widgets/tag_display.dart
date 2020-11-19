@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import '../generated/model/tag.dart';
 
 class TagDisplay extends StatelessWidget {
-  TagDisplay({@required this.tag})
-      : assert(tag != null);
+  TagDisplay({
+    @required this.tag,
+    this.onTap,
+  }) : assert(tag != null);
 
   final Tag tag;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Chip(
+    Widget chip = Chip(
       backgroundColor: tag.color,
       label: Text(
         tag.title.toUpperCase(),
@@ -20,6 +23,15 @@ class TagDisplay extends StatelessWidget {
             .copyWith(color: _estimateForegroundColor()),
       ),
     );
+
+    if (onTap != null) {
+      chip = InkWell(
+        onTap: onTap,
+        child: chip,
+      );
+    }
+
+    return chip;
   }
 
   Color _estimateForegroundColor() =>
