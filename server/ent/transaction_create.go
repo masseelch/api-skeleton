@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/account"
 	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
@@ -30,8 +31,8 @@ func (tc *TransactionCreate) SetDate(t time.Time) *TransactionCreate {
 }
 
 // SetAmount sets the amount field.
-func (tc *TransactionCreate) SetAmount(i int) *TransactionCreate {
-	tc.mutation.SetAmount(i)
+func (tc *TransactionCreate) SetAmount(s server.Money) *TransactionCreate {
+	tc.mutation.SetAmount(s)
 	return tc
 }
 

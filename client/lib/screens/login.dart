@@ -23,8 +23,6 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-
   final _focusScopeNode = FocusScopeNode();
 
   String _email;
@@ -51,7 +49,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final t = AppLocalizations.of(context);
 
     return Scaffold(
-      key: _scaffoldKey,
       extendBodyBehindAppBar: true,
       body: SingleChildScrollView(
         child: Center(
@@ -165,16 +162,16 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushNamedAndRemoveUntil(
               context, '/dashboard', (_) => false);
         } else {
-          showErrorSnackBar(context, scaffold: _scaffoldKey.currentState);
+          showErrorSnackBar(context);
           hideLoadingDialog(context);
         }
       } catch (e) {
         print(e);
         showErrorSnackBar(
           context,
-          scaffold: _scaffoldKey.currentState,
-          content:
-              AppLocalizations.of(context).screenLoginFeedbackBadCredentials,
+          content: AppLocalizations.of(
+            context,
+          ).screenLoginFeedbackBadCredentials,
         );
         hideLoadingDialog(context);
       } finally {

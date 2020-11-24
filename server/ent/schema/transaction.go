@@ -6,6 +6,7 @@ import (
 	"github.com/facebook/ent/schema/edge"
 	"github.com/facebook/ent/schema/field"
 	"github.com/masseelch/elk"
+	server "skeleton"
 )
 
 // Transaction holds the schema definition for the Transaction entity.
@@ -21,6 +22,7 @@ func (Transaction) Fields() []ent.Field {
 		field.Time("date").
 			StructTag(`groups:"transaction:list"`),
 		field.Int("amount").
+			GoType(server.Money(0)).
 			StructTag(`groups:"transaction:list"`),
 		field.String("title").
 			StructTag(`groups:"transaction:list"`),

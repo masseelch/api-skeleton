@@ -1424,8 +1424,8 @@ type TransactionMutation struct {
 	typ            string
 	id             *int
 	date           *time.Time
-	amount         *int
-	addamount      *int
+	amount         *server.Money
+	addamount      *server.Money
 	title          *string
 	clearedFields  map[string]struct{}
 	user           *int
@@ -1563,13 +1563,13 @@ func (m *TransactionMutation) ResetDate() {
 }
 
 // SetAmount sets the amount field.
-func (m *TransactionMutation) SetAmount(i int) {
-	m.amount = &i
+func (m *TransactionMutation) SetAmount(s server.Money) {
+	m.amount = &s
 	m.addamount = nil
 }
 
 // Amount returns the amount value in the mutation.
-func (m *TransactionMutation) Amount() (r int, exists bool) {
+func (m *TransactionMutation) Amount() (r server.Money, exists bool) {
 	v := m.amount
 	if v == nil {
 		return
@@ -1581,7 +1581,7 @@ func (m *TransactionMutation) Amount() (r int, exists bool) {
 // If the Transaction object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *TransactionMutation) OldAmount(ctx context.Context) (v int, err error) {
+func (m *TransactionMutation) OldAmount(ctx context.Context) (v server.Money, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldAmount is allowed only on UpdateOne operations")
 	}
@@ -1595,17 +1595,17 @@ func (m *TransactionMutation) OldAmount(ctx context.Context) (v int, err error) 
 	return oldValue.Amount, nil
 }
 
-// AddAmount adds i to amount.
-func (m *TransactionMutation) AddAmount(i int) {
+// AddAmount adds s to amount.
+func (m *TransactionMutation) AddAmount(s server.Money) {
 	if m.addamount != nil {
-		*m.addamount += i
+		*m.addamount += s
 	} else {
-		m.addamount = &i
+		m.addamount = &s
 	}
 }
 
 // AddedAmount returns the value that was added to the amount field in this mutation.
-func (m *TransactionMutation) AddedAmount() (r int, exists bool) {
+func (m *TransactionMutation) AddedAmount() (r server.Money, exists bool) {
 	v := m.addamount
 	if v == nil {
 		return
@@ -1857,7 +1857,7 @@ func (m *TransactionMutation) SetField(name string, value ent.Value) error {
 		m.SetDate(v)
 		return nil
 	case transaction.FieldAmount:
-		v, ok := value.(int)
+		v, ok := value.(server.Money)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1901,7 +1901,7 @@ func (m *TransactionMutation) AddedField(name string) (ent.Value, bool) {
 func (m *TransactionMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case transaction.FieldAmount:
-		v, ok := value.(int)
+		v, ok := value.(server.Money)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

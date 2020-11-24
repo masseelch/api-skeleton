@@ -2,7 +2,9 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'dart:ui';
-import '../../utils/json_converter.dart';
+import '../../utils/json_converter/color.dart';
+import '../../utils/money.dart';
+import '../../utils/json_converter/money.dart';
 
 import '../model/user.dart';
 import '../model/account.dart';
@@ -16,10 +18,17 @@ class Transaction {
 
   int id;
   DateTime date;
-  int amount;
+  @MoneyConverter()
+  Money amount;
   String title;
 
   TransactionEdges edges;
+
+  @override
+  int get hashCode => id;
+
+  @override
+  bool operator ==(Object other) => other is Transaction && id == other.id;
 
   factory Transaction.fromJson(Map<String, dynamic> json) =>
       _$TransactionFromJson(json);

@@ -3,6 +3,7 @@
 package transaction
 
 import (
+	server "skeleton"
 	"skeleton/ent/predicate"
 	"time"
 
@@ -101,9 +102,10 @@ func Date(v time.Time) predicate.Transaction {
 }
 
 // Amount applies equality check predicate on the "amount" field. It's identical to AmountEQ.
-func Amount(v int) predicate.Transaction {
+func Amount(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAmount), v))
+		s.Where(sql.EQ(s.C(FieldAmount), vc))
 	})
 }
 
@@ -191,24 +193,26 @@ func DateLTE(v time.Time) predicate.Transaction {
 }
 
 // AmountEQ applies the EQ predicate on the "amount" field.
-func AmountEQ(v int) predicate.Transaction {
+func AmountEQ(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAmount), v))
+		s.Where(sql.EQ(s.C(FieldAmount), vc))
 	})
 }
 
 // AmountNEQ applies the NEQ predicate on the "amount" field.
-func AmountNEQ(v int) predicate.Transaction {
+func AmountNEQ(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldAmount), v))
+		s.Where(sql.NEQ(s.C(FieldAmount), vc))
 	})
 }
 
 // AmountIn applies the In predicate on the "amount" field.
-func AmountIn(vs ...int) predicate.Transaction {
+func AmountIn(vs ...server.Money) predicate.Transaction {
 	v := make([]interface{}, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = int(vs[i])
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
@@ -222,10 +226,10 @@ func AmountIn(vs ...int) predicate.Transaction {
 }
 
 // AmountNotIn applies the NotIn predicate on the "amount" field.
-func AmountNotIn(vs ...int) predicate.Transaction {
+func AmountNotIn(vs ...server.Money) predicate.Transaction {
 	v := make([]interface{}, len(vs))
 	for i := range v {
-		v[i] = vs[i]
+		v[i] = int(vs[i])
 	}
 	return predicate.Transaction(func(s *sql.Selector) {
 		// if not arguments were provided, append the FALSE constants,
@@ -239,30 +243,34 @@ func AmountNotIn(vs ...int) predicate.Transaction {
 }
 
 // AmountGT applies the GT predicate on the "amount" field.
-func AmountGT(v int) predicate.Transaction {
+func AmountGT(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldAmount), v))
+		s.Where(sql.GT(s.C(FieldAmount), vc))
 	})
 }
 
 // AmountGTE applies the GTE predicate on the "amount" field.
-func AmountGTE(v int) predicate.Transaction {
+func AmountGTE(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldAmount), v))
+		s.Where(sql.GTE(s.C(FieldAmount), vc))
 	})
 }
 
 // AmountLT applies the LT predicate on the "amount" field.
-func AmountLT(v int) predicate.Transaction {
+func AmountLT(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldAmount), v))
+		s.Where(sql.LT(s.C(FieldAmount), vc))
 	})
 }
 
 // AmountLTE applies the LTE predicate on the "amount" field.
-func AmountLTE(v int) predicate.Transaction {
+func AmountLTE(v server.Money) predicate.Transaction {
+	vc := int(v)
 	return predicate.Transaction(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldAmount), v))
+		s.Where(sql.LTE(s.C(FieldAmount), vc))
 	})
 }
 

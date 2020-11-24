@@ -11,4 +11,8 @@ flutter:
     - go: server.Color
       dart: Color
       import: dart:ui
-      converter: ../../utils/json_converter.dart
+      converter: ../../utils/json_converter/color.dart
+    - go: server.Money
+      dart: Money
+      import: ../../utils/money.dart
+      converter: ../../utils/json_converter/money.dart

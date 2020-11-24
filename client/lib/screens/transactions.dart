@@ -6,7 +6,7 @@ import '../generated/client/account.dart';
 import '../generated/model/account.dart';
 import '../generated/model/transaction.dart';
 import '../generated/model/user.dart';
-import '../widgets/money.dart';
+import '../widgets/money_display.dart';
 import '../widgets/progress_indicators.dart';
 import '../widgets/tag_display.dart';
 
@@ -32,15 +32,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(t.screenTransactionsTitle(widget.account.title)),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
         child: Icon(Icons.add),
         onPressed: () async {
           final t = Navigator.push<Transaction>(
@@ -119,7 +116,7 @@ class _Entry extends StatelessWidget {
               ),
             ],
           ),
-          Money(transaction.amount),
+          MoneyDisplay(transaction.amount),
         ],
       ),
     );

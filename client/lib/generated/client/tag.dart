@@ -5,7 +5,9 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
 
 import 'dart:ui';
-import '../../utils/json_converter.dart';
+import '../../utils/json_converter/color.dart';
+import '../../utils/money.dart';
+import '../../utils/json_converter/money.dart';
 
 import '../model/tag.dart';
 import '../model/transaction.dart';

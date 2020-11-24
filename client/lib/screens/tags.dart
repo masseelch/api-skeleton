@@ -49,8 +49,6 @@ class _TagsScreenState extends State<TagsScreen> {
       drawer: drawer,
       appBar: appBar,
       floatingActionButton: FloatingActionButton(
-        backgroundColor: theme.primaryColor,
-        foregroundColor: theme.colorScheme.onPrimary,
         child: const Icon(Icons.add),
         onPressed: () async {
           final tag = await showDialog<Tag>(
@@ -157,9 +155,11 @@ class _EditTagDialogState extends State<_EditTagDialog> {
             try {
               Tag tag;
               if (_tag.id == null) {
-                tag = await TagClient.of(context).create(TagCreateRequest.fromTag(_tag));
+                tag = await TagClient.of(context)
+                    .create(TagCreateRequest.fromTag(_tag));
               } else {
-                tag = await TagClient.of(context).update(TagUpdateRequest.fromTag(_tag));
+                tag = await TagClient.of(context)
+                    .update(TagUpdateRequest.fromTag(_tag));
               }
 
               Navigator.pop(context);

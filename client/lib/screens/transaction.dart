@@ -1,8 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide InputDatePickerFormField;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:smart_select/smart_select.dart';
 
+import '../generated/client/user.dart';
 import '../generated/model/account.dart';
+import '../generated/model/tag.dart';
 import '../generated/model/transaction.dart';
+import '../services/token.dart';
+import '../utils/money.dart';
+import '../utils/validate.dart';
+import '../widgets/form/async_dropdown.dart';
+import '../widgets/form/input_date_picker.dart';
+import '../widgets/form/money.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({
@@ -20,14 +29,19 @@ class TransactionScreen extends StatefulWidget {
 class _TransactionScreenState extends State<TransactionScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  Future<List<Account>> _accounts$;
+
   Transaction _transaction;
 
   @override
   void initState() {
     super.initState();
 
+    _accounts$ = TokenService().getUser().then(UserClient.of(context).accounts);
+
     _transaction = widget.transaction ?? Transaction()
-      ..date = DateTime.now();
+      ..date = DateTime.now()
+      ..edges = TransactionEdges();
   }
 
   @override
@@ -44,19 +58,53 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       body: Form(
         key: _formKey,
-        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: ListView(
           children: [
-            DropdownButtonFormField(
-              items: [],
-              onChanged: (v) {},
+            AsyncDropdownButtonFormField<Account>(
+              future: _accounts$,
+              itemBuilder: (acc) {
+                return DropdownMenuItem<Account>(
+                  value: acc,
+                  child: Text(acc.title),
+                );
+              },
+              value: _transaction.edges.account,
+              onSaved: (acc) => _transaction.edges.account = acc,
+              decoration: InputDecoration(
+                labelText: t.screenTransactionFormAccountLabel,
+              ),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: Validate<Account>().notNull(),
             ),
             InputDatePickerFormField(
               firstDate: DateTime(2010),
               lastDate: DateTime(2100),
               initialDate: _transaction.date,
-              onDateSaved: (v) => _transaction.date = v,
-              errorFormatText: t.screenTransactionFormDateError,
+              onSaved: (v) => _transaction.date = v,
+            ),
+            TextFormField(
+              initialValue: _transaction.title,
+              decoration: InputDecoration(
+                labelText: t.screenTransactionFormTitleLabel,
+              ),
+              onSaved: (v) => _transaction.title = v,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: Validate().notEmpty(),
+            ),
+            MoneyFormField(
+              initialValue: _transaction.amount,
+              decoration: InputDecoration(
+                labelText: t.screenTransactionFormAmountLabel,
+              ),
+              onSaved: (v) => _transaction.amount = v,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: Validate<Money>().notNull(),
+            ),
+            SmartSelect<Tag>.multiple(
+              value: _transaction.edges.tags ?? [],
+              onChange: (S2MultiState<Tag> tag) {
+                print(tag);
+              },
             ),
           ] // Wrap all items with some padding.
               .map((child) => Padding(

@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/account"
 	"skeleton/ent/predicate"
 	"skeleton/ent/tag"
@@ -37,15 +38,15 @@ func (tu *TransactionUpdate) SetDate(t time.Time) *TransactionUpdate {
 }
 
 // SetAmount sets the amount field.
-func (tu *TransactionUpdate) SetAmount(i int) *TransactionUpdate {
+func (tu *TransactionUpdate) SetAmount(s server.Money) *TransactionUpdate {
 	tu.mutation.ResetAmount()
-	tu.mutation.SetAmount(i)
+	tu.mutation.SetAmount(s)
 	return tu
 }
 
-// AddAmount adds i to amount.
-func (tu *TransactionUpdate) AddAmount(i int) *TransactionUpdate {
-	tu.mutation.AddAmount(i)
+// AddAmount adds s to amount.
+func (tu *TransactionUpdate) AddAmount(s server.Money) *TransactionUpdate {
+	tu.mutation.AddAmount(s)
 	return tu
 }
 
@@ -392,15 +393,15 @@ func (tuo *TransactionUpdateOne) SetDate(t time.Time) *TransactionUpdateOne {
 }
 
 // SetAmount sets the amount field.
-func (tuo *TransactionUpdateOne) SetAmount(i int) *TransactionUpdateOne {
+func (tuo *TransactionUpdateOne) SetAmount(s server.Money) *TransactionUpdateOne {
 	tuo.mutation.ResetAmount()
-	tuo.mutation.SetAmount(i)
+	tuo.mutation.SetAmount(s)
 	return tuo
 }
 
-// AddAmount adds i to amount.
-func (tuo *TransactionUpdateOne) AddAmount(i int) *TransactionUpdateOne {
-	tuo.mutation.AddAmount(i)
+// AddAmount adds s to amount.
+func (tuo *TransactionUpdateOne) AddAmount(s server.Money) *TransactionUpdateOne {
+	tuo.mutation.AddAmount(s)
 	return tuo
 }
 

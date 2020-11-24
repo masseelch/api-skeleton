@@ -2,7 +2,9 @@
 import 'package:json_annotation/json_annotation.dart';
 
 import 'dart:ui';
-import '../../utils/json_converter.dart';
+import '../../utils/json_converter/color.dart';
+import '../../utils/money.dart';
+import '../../utils/json_converter/money.dart';
 
 import '../model/session.dart';
 import '../model/account.dart';
@@ -22,6 +24,12 @@ class User {
   String lastName;
 
   UserEdges edges;
+
+  @override
+  int get hashCode => id;
+
+  @override
+  bool operator ==(Object other) => other is User && id == other.id;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);

@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	server "skeleton"
 	"skeleton/ent/account"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
@@ -20,7 +21,7 @@ type Transaction struct {
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty" groups:"transaction:list"`
 	// Amount holds the value of the "amount" field.
-	Amount int `json:"amount,omitempty" groups:"transaction:list"`
+	Amount server.Money `json:"amount,omitempty" groups:"transaction:list"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty" groups:"transaction:list"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -118,7 +119,7 @@ func (t *Transaction) assignValues(values ...interface{}) error {
 	if value, ok := values[1].(*sql.NullInt64); !ok {
 		return fmt.Errorf("unexpected type %T for field amount", values[1])
 	} else if value.Valid {
-		t.Amount = int(value.Int64)
+		t.Amount = server.Money(value.Int64)
 	}
 	if value, ok := values[2].(*sql.NullString); !ok {
 		return fmt.Errorf("unexpected type %T for field title", values[2])

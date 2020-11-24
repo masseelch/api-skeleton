@@ -7,9 +7,10 @@ import '../generated/model/account.dart';
 import '../screens/transaction.dart';
 import '../services/token.dart';
 import '../utils/date_extensions.dart';
+import '../utils/money.dart';
 import '../widgets/drawer.dart';
 import '../widgets/list_header.dart';
-import '../widgets/money.dart';
+import '../widgets/money_display.dart';
 import '../widgets/progress_indicators.dart';
 import 'transactions.dart';
 
@@ -125,7 +126,7 @@ class _AccountTile extends StatefulWidget {
 }
 
 class __AccountTileState extends State<_AccountTile> {
-  int _expenses;
+  Money _expenses;
 
   @override
   void initState() {
@@ -133,7 +134,7 @@ class __AccountTileState extends State<_AccountTile> {
 
     _expenses = widget.account.edges.transactions
         .where((t) => !t.date.isSameMonth(widget.month))
-        .fold<int>(0, (p, e) => p + e.amount);
+        .fold<Money>(Money(0), (p, e) => p + e.amount);
   }
 
   @override
@@ -160,7 +161,7 @@ class __AccountTileState extends State<_AccountTile> {
                 ),
               ],
             ),
-            Money(_expenses),
+            MoneyDisplay(_expenses),
           ],
         ),
       ),

@@ -44,16 +44,25 @@
   "@dialogLoadingContent": {
     "description": "Default text on a loading spinner dialog"
   },
-  "formDatePickerDateFormat": "{date}",
+  "formDatePickerDateFormat": "dd.MM.yyyy",
   "@formDatePickerDateFormat": {
-    "description": "Default date format in date picker form field",
-    "placeholders": {
-      "date": {
-        "type": "DateTime",
-        "format": "yMd",
-        "example": "01.02.2003"
-      }
-    }
+    "description": "Default date format in date picker form field"
+  },
+  "formMoneyDecimalSeparator": ",",
+  "@formMoneyDecimalSeparator": {
+    "description": "Decimal separator used when displaying money"
+  },
+  "formMoneyThousandSeparator": ".",
+  "@formMoneyThousandSeparator": {
+    "description": "Thousand separator used when displaying money"
+  },
+  "formMoneyRightSymbol": " €",
+  "@formMoneyRightSymbol": {
+    "description": "Symbol to display on the right of formatted money"
+  },
+  "formMoneyLeftSymbol": "",
+  "@formMoneyLeftSymbol": {
+    "description": "Symbol to display on the left of formatted money"
   },
   "snackbarErrorContent": "Es ist unerwartet ein Fehler aufgetreten.",
   "@snackbarErrorContent": {
@@ -138,6 +147,18 @@
   "@screenTransactionTitleEdit": {
     "description": "Title of the transactions edit screen"
   },
+  "screenTransactionFormAmountLabel": "Betrag",
+  "@screenTransactionFormAmountLabel": {
+    "description": "Label of the amount form field in transaction screen"
+  },
+  "screenTransactionFormAccountLabel": "Kostenstelle",
+  "@screenTransactionFormAccountLabel": {
+    "description": "Label of the account form field in transaction screen"
+  },
+  "screenTransactionFormTitleLabel": "Beschreibung",
+  "@screenTransactionFormTitleLabel": {
+    "description": "Label of the title form field in transaction screen"
+  },
   "screenTransactionFormDateError": "Datum im Format tt.mm.yyyy angeben",
   "@screenTransactionFormDateError": {
     "description": "Label of the date form field in transaction screen"
@@ -166,5 +187,9 @@
         "example": "Max Mustermann"
       }
     }
+  },
+  "validationErrorRequired": "Dieser Wert ist erforderlich",
+  "@validationErrorRequired": {
+    "description": "General error when the required validator fails"
   }
 }

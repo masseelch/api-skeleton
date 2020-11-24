@@ -5,7 +5,9 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
 
 import 'dart:ui';
-import '../../utils/json_converter.dart';
+import '../../utils/json_converter/color.dart';
+import '../../utils/money.dart';
+import '../../utils/json_converter/money.dart';
 
 import '../model/transaction.dart';
 import '../model/user.dart';
@@ -33,7 +35,7 @@ class TransactionClient {
     int page,
     int itemsPerPage,
     DateTime date,
-    int amount,
+    Money amount,
     String title,
   }) async {
     final params = const {};
@@ -116,7 +118,8 @@ class TransactionCreateRequest {
         tags = e.edges.tags;
 
   DateTime date;
-  int amount;
+  @MoneyConverter()
+  Money amount;
   String title;
   User user;
   Account account;
@@ -148,7 +151,8 @@ class TransactionUpdateRequest {
 
   int id;
   DateTime date;
-  int amount;
+  @MoneyConverter()
+  Money amount;
   String title;
   User user;
   Account account;

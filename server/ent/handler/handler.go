@@ -21,6 +21,8 @@ import (
 	"skeleton/ent/user"
 
 	server "skeleton"
+
+	server "skeleton"
 )
 
 // Shared handler.
@@ -692,12 +694,12 @@ func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Log
 
 // struct to bind the post body to.
 type transactionCreateRequest struct {
-	Date    time.Time `json:"date,omitempty" `
-	Amount  int       `json:"amount,omitempty" `
-	Title   string    `json:"title,omitempty" `
-	User    int       `json:"user,omitempty" `
-	Account int       `json:"account,omitempty" `
-	Tags    []int     `json:"tags,omitempty" `
+	Date    time.Time    `json:"date,omitempty" `
+	Amount  server.Money `json:"amount,omitempty" `
+	Title   string       `json:"title,omitempty" `
+	User    int          `json:"user,omitempty" `
+	Account int          `json:"account,omitempty" `
+	Tags    []int        `json:"tags,omitempty" `
 }
 
 // This function creates a new Transaction model and stores it in the database.
@@ -794,12 +796,12 @@ func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type transactionUpdateRequest struct {
-	Date    time.Time `json:"date,omitempty" `
-	Amount  int       `json:"amount,omitempty" `
-	Title   string    `json:"title,omitempty" `
-	User    int       `json:"user,omitempty" `
-	Account int       `json:"account,omitempty" `
-	Tags    []int     `json:"tags,omitempty" `
+	Date    time.Time    `json:"date,omitempty" `
+	Amount  server.Money `json:"amount,omitempty" `
+	Title   string       `json:"title,omitempty" `
+	User    int          `json:"user,omitempty" `
+	Account int          `json:"account,omitempty" `
+	Tags    []int        `json:"tags,omitempty" `
 }
 
 // This function updates a given Transaction model and saves the changes in the database.
