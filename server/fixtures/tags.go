@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	server "skeleton"
 	"skeleton/ent"
+	"strings"
 )
 
 const (
@@ -48,7 +49,7 @@ func tags(refs refs, c *ent.Client) error {
 	b := make([]*ent.TagCreate, tagCount)
 	for i := 0; i < tagCount; i++ {
 		b[i] = c.Tag.Create().
-			SetTitle(fmt.Sprintf("%s %s", randomdata.Adjective(), randomdata.Noun())).
+			SetTitle(strings.ToUpper(fmt.Sprintf("%s %s", randomdata.Adjective(), randomdata.Noun()))).
 			SetColor(server.Color(colors[i]))
 	}
 

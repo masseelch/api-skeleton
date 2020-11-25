@@ -21,7 +21,12 @@ func (Tag) Fields() []ent.Field {
 		field.Int("id").
 			StructTag(`groups:"tag:list,tag:read"`),
 		field.String("title").
-			StructTag(`groups:"tag:list,tag:read"`),
+			StructTag(`groups:"tag:list,tag:read"`).
+			Annotations(
+				elk.FieldAnnotation{
+					CreateValidationTag: `validate:"uppercase"`,
+				},
+			),
 		field.Uint32("color").
 			GoType(server.Color(0)).
 			StructTag(`groups:"tag:list,tag:read"`),

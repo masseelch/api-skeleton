@@ -143,6 +143,8 @@ class UserUpdateRequest {
     this.enabled,
     this.firstName,
     this.lastName,
+    this.accounts,
+    this.transactions,
   });
 
   UserUpdateRequest.fromUser(User e)
@@ -151,7 +153,9 @@ class UserUpdateRequest {
         password = e.password,
         enabled = e.enabled,
         firstName = e.firstName,
-        lastName = e.lastName;
+        lastName = e.lastName,
+        accounts = e.edges?.accounts,
+        transactions = e.edges?.transactions;
 
   int id;
   String email;
@@ -159,6 +163,8 @@ class UserUpdateRequest {
   bool enabled;
   String firstName;
   String lastName;
+  List<Account> accounts;
+  List<Transaction> transactions;
 
   Map<String, dynamic> toJson() => _$UserUpdateRequestToJson(this);
 }

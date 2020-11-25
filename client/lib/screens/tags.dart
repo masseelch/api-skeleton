@@ -1,10 +1,11 @@
-import 'package:client/dialogs/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
+import '../dialogs/loading.dart';
 import '../generated/client/tag.dart';
 import '../generated/model/tag.dart';
+import '../utils/text_formatters/uppercase.dart';
 import '../widgets/drawer.dart';
 import '../widgets/progress_indicators.dart';
 import '../widgets/tag_display.dart';
@@ -63,9 +64,7 @@ class _TagsScreenState extends State<TagsScreen> {
           if (tag != null) {
             setState(() {
               _tags.add(tag);
-              _tags.sort((t1, t2) => t1.title.toLowerCase().compareTo(
-                    t2.title.toLowerCase(),
-                  ));
+              _tags.sort((t1, t2) => t1.title.compareTo(t2.title));
             });
           }
         },
@@ -87,9 +86,7 @@ class _TagsScreenState extends State<TagsScreen> {
                 if (tag != null) {
                   setState(() {
                     _tags[index] = tag;
-                    _tags.sort((t1, t2) => t1.title.toLowerCase().compareTo(
-                          t2.title.toLowerCase(),
-                        ));
+                    _tags.sort((t1, t2) => t1.title.compareTo(t2.title));
                   });
                 }
               },
@@ -178,6 +175,8 @@ class _EditTagDialogState extends State<_EditTagDialog> {
           TextField(
             focusNode: _titleFocusNode,
             controller: _titleController,
+            inputFormatters: [UpperCaseTextFormatter()],
+            autocorrect: false,
             onChanged: (v) {
               setState(() {
                 _tag.title = v;

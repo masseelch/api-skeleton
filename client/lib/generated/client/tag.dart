@@ -90,7 +90,7 @@ class TagCreateRequest {
   TagCreateRequest.fromTag(Tag e)
       : title = e.title,
         color = e.color,
-        transactions = e.edges.transactions;
+        transactions = e.edges?.transactions;
 
   String title;
   @ColorConverter()
@@ -113,7 +113,7 @@ class TagUpdateRequest {
       : id = e.id,
         title = e.title,
         color = e.color,
-        transactions = e.edges.transactions;
+        transactions = e.edges?.transactions;
 
   int id;
   String title;

@@ -12,7 +12,7 @@ require (
 	github.com/hashicorp/go-version v1.2.1 // indirect
 	github.com/liip/sheriff v0.9.0
 	github.com/magiconair/properties v1.8.4 // indirect
-	github.com/masseelch/elk v0.0.0-20201118125549-0d8b9a2586d9
+	github.com/masseelch/elk v0.0.0-20201125090238-04c2cdfb56e5
 	github.com/masseelch/go-token v1.0.1
 	github.com/masseelch/render v1.0.1
 	github.com/mattn/go-sqlite3 v1.14.4

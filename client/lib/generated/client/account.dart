@@ -91,8 +91,8 @@ class AccountCreateRequest {
 
   AccountCreateRequest.fromAccount(Account e)
       : title = e.title,
-        users = e.edges.users,
-        transactions = e.edges.transactions;
+        users = e.edges?.users,
+        transactions = e.edges?.transactions;
 
   String title;
   List<User> users;
@@ -113,8 +113,8 @@ class AccountUpdateRequest {
   AccountUpdateRequest.fromAccount(Account e)
       : id = e.id,
         title = e.title,
-        users = e.edges.users,
-        transactions = e.edges.transactions;
+        users = e.edges?.users,
+        transactions = e.edges?.transactions;
 
   int id;
   String title;

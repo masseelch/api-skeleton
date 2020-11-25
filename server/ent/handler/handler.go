@@ -14,15 +14,12 @@ import (
 	"github.com/masseelch/render"
 	"github.com/sirupsen/logrus"
 
+	server "skeleton"
 	"skeleton/ent"
 	"skeleton/ent/account"
 	"skeleton/ent/tag"
 	"skeleton/ent/transaction"
 	"skeleton/ent/user"
-
-	server "skeleton"
-
-	server "skeleton"
 )
 
 // Shared handler.
@@ -64,9 +61,9 @@ func NewAccountHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger)
 
 // struct to bind the post body to.
 type accountCreateRequest struct {
-	Title        string `json:"title,omitempty" `
-	Users        []int  `json:"users,omitempty" `
-	Transactions []int  `json:"transactions,omitempty" `
+	Title        string `json:"title,omitempty"`
+	Users        []int  `json:"users,omitempty"`
+	Transactions []int  `json:"transactions,omitempty"`
 }
 
 // This function creates a new Account model and stores it in the database.
@@ -160,9 +157,9 @@ func (h AccountHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type accountUpdateRequest struct {
-	Title        string `json:"title,omitempty" `
-	Users        []int  `json:"users,omitempty" `
-	Transactions []int  `json:"transactions,omitempty" `
+	Title        string `json:"title,omitempty"`
+	Users        []int  `json:"users,omitempty"`
+	Transactions []int  `json:"transactions,omitempty"`
 }
 
 // This function updates a given Account model and saves the changes in the database.
@@ -349,13 +346,7 @@ func (h AccountHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("amount"); f != "" {
-		i, err := strconv.Atoi(f)
-		if err != nil {
-			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
-			render.BadRequest(w, r, "'amount' must be an integer")
-			return
-		}
-		q.Where(transaction.Amount(i))
+		// todo
 	}
 
 	if f := r.URL.Query().Get("title"); f != "" {
@@ -410,9 +401,9 @@ func NewTagHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *Ta
 
 // struct to bind the post body to.
 type tagCreateRequest struct {
-	Title        string       `json:"title,omitempty" `
-	Color        server.Color `json:"color,omitempty" `
-	Transactions []int        `json:"transactions,omitempty" `
+	Title        string       `json:"title,omitempty" validate:"uppercase"`
+	Color        server.Color `json:"color,omitempty"`
+	Transactions []int        `json:"transactions,omitempty"`
 }
 
 // This function creates a new Tag model and stores it in the database.
@@ -506,9 +497,9 @@ func (h TagHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type tagUpdateRequest struct {
-	Title        string       `json:"title,omitempty" `
-	Color        server.Color `json:"color,omitempty" `
-	Transactions []int        `json:"transactions,omitempty" `
+	Title        string       `json:"title,omitempty"`
+	Color        server.Color `json:"color,omitempty"`
+	Transactions []int        `json:"transactions,omitempty"`
 }
 
 // This function updates a given Tag model and saves the changes in the database.
@@ -587,6 +578,7 @@ func (h TagHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("color"); f != "" {
+		// todo
 	}
 
 	es, err := q.All(r.Context())
@@ -631,13 +623,7 @@ func (h TagHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("amount"); f != "" {
-		i, err := strconv.Atoi(f)
-		if err != nil {
-			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
-			render.BadRequest(w, r, "'amount' must be an integer")
-			return
-		}
-		q.Where(transaction.Amount(i))
+		// todo
 	}
 
 	if f := r.URL.Query().Get("title"); f != "" {
@@ -694,12 +680,12 @@ func NewTransactionHandler(c *ent.Client, v *validator.Validate, log *logrus.Log
 
 // struct to bind the post body to.
 type transactionCreateRequest struct {
-	Date    time.Time    `json:"date,omitempty" `
-	Amount  server.Money `json:"amount,omitempty" `
-	Title   string       `json:"title,omitempty" `
-	User    int          `json:"user,omitempty" `
-	Account int          `json:"account,omitempty" `
-	Tags    []int        `json:"tags,omitempty" `
+	Date    time.Time    `json:"date,omitempty"`
+	Amount  server.Money `json:"amount,omitempty"`
+	Title   string       `json:"title,omitempty"`
+	User    int          `json:"user,omitempty"`
+	Account int          `json:"account,omitempty"`
+	Tags    []int        `json:"tags,omitempty"`
 }
 
 // This function creates a new Transaction model and stores it in the database.
@@ -796,12 +782,12 @@ func (h TransactionHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type transactionUpdateRequest struct {
-	Date    time.Time    `json:"date,omitempty" `
-	Amount  server.Money `json:"amount,omitempty" `
-	Title   string       `json:"title,omitempty" `
-	User    int          `json:"user,omitempty" `
-	Account int          `json:"account,omitempty" `
-	Tags    []int        `json:"tags,omitempty" `
+	Date    time.Time    `json:"date,omitempty"`
+	Amount  server.Money `json:"amount,omitempty"`
+	Title   string       `json:"title,omitempty"`
+	User    int          `json:"user,omitempty"`
+	Account int          `json:"account,omitempty"`
+	Tags    []int        `json:"tags,omitempty"`
 }
 
 // This function updates a given Transaction model and saves the changes in the database.
@@ -882,13 +868,7 @@ func (h TransactionHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("amount"); f != "" {
-		i, err := strconv.Atoi(f)
-		if err != nil {
-			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
-			render.BadRequest(w, r, "'amount' must be an integer")
-			return
-		}
-		q.Where(transaction.Amount(i))
+		// todo
 	}
 
 	if f := r.URL.Query().Get("title"); f != "" {
@@ -1014,6 +994,7 @@ func (h TransactionHandler) Tags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("color"); f != "" {
+		// todo
 	}
 
 	es, err := q.All(r.Context())
@@ -1066,11 +1047,11 @@ func NewUserHandler(c *ent.Client, v *validator.Validate, log *logrus.Logger) *U
 
 // struct to bind the post body to.
 type userCreateRequest struct {
-	Email     string `json:"email,omitempty" `
-	Password  string `json:"password,omitempty" `
-	Enabled   bool   `json:"enabled,omitempty" `
-	FirstName string `json:"firstName,omitempty" `
-	LastName  string `json:"lastName,omitempty" `
+	Email     string `json:"email,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Enabled   bool   `json:"enabled,omitempty"`
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
 }
 
 // This function creates a new User model and stores it in the database.
@@ -1166,11 +1147,13 @@ func (h UserHandler) Read(w http.ResponseWriter, r *http.Request) {
 
 // struct to bind the post body to.
 type userUpdateRequest struct {
-	Email     string `json:"email,omitempty" `
-	Password  string `json:"password,omitempty" `
-	Enabled   bool   `json:"enabled,omitempty" `
-	FirstName string `json:"firstName,omitempty" `
-	LastName  string `json:"lastName,omitempty" `
+	Email        string `json:"email,omitempty"`
+	Password     string `json:"password,omitempty"`
+	Enabled      bool   `json:"enabled,omitempty"`
+	FirstName    string `json:"firstName,omitempty"`
+	LastName     string `json:"lastName,omitempty"`
+	Accounts     []int  `json:"accounts,omitempty"`
+	Transactions []int  `json:"transactions,omitempty"`
 }
 
 // This function updates a given User model and saves the changes in the database.
@@ -1207,7 +1190,9 @@ func (h UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		SetPassword(d.Password).
 		SetEnabled(d.Enabled).
 		SetFirstName(d.FirstName).
-		SetLastName(d.LastName)
+		SetLastName(d.LastName).
+		AddAccountIDs(d.Accounts...).
+		AddTransactionIDs(d.Transactions...)
 
 	// Save in database.
 	e, err := b.Save(r.Context())
@@ -1398,13 +1383,7 @@ func (h UserHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if f := r.URL.Query().Get("amount"); f != "" {
-		i, err := strconv.Atoi(f)
-		if err != nil {
-			h.logger.WithError(err).WithField("amount", f).Debug("could not parse query parameter")
-			render.BadRequest(w, r, "'amount' must be an integer")
-			return
-		}
-		q.Where(transaction.Amount(i))
+		// todo
 	}
 
 	if f := r.URL.Query().Get("title"); f != "" {

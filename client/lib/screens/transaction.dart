@@ -1,7 +1,9 @@
+import 'package:client/widgets/tag_display.dart';
 import 'package:flutter/material.dart' hide InputDatePickerFormField;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:smart_select/smart_select.dart';
 
+import '../generated/client/tag.dart';
 import '../generated/client/user.dart';
 import '../generated/model/account.dart';
 import '../generated/model/tag.dart';
@@ -30,6 +32,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Future<List<Account>> _accounts$;
+  Future<List<Tag>> _tags$;
+  List<S2Choice<Tag>> _tags; // todo - future-builder
 
   Transaction _transaction;
 
@@ -38,6 +42,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
     super.initState();
 
     _accounts$ = TokenService().getUser().then(UserClient.of(context).accounts);
+    _tags$ = TagClient.of(context).list();
+    _tags$.then((value) => setState(() {
+          _tags = S2Choice.listFrom<Tag, Tag>(
+            source: value,
+            value: (index, item) => item,
+            title: (index, item) => item.title,
+          );
+        }));
 
     _transaction = widget.transaction ?? Transaction()
       ..date = DateTime.now()
@@ -101,9 +113,47 @@ class _TransactionScreenState extends State<TransactionScreen> {
               validator: Validate<Money>().notNull(),
             ),
             SmartSelect<Tag>.multiple(
-              value: _transaction.edges.tags ?? [],
-              onChange: (S2MultiState<Tag> tag) {
-                print(tag);
+              title: 'Kategorien (ut)',
+              value: _transaction.edges.tags,
+              onChange: (state) {
+                setState(() {
+                  _transaction.edges.tags = state.value;
+                });
+              },
+              choiceItems: _tags ?? [],
+              choiceLayout: S2ChoiceLayout.wrap,
+              choiceBuilder: (_, choice, __) {
+                return TagDisplay(
+                  tag: choice.value,
+                  chipStyle: ChipStyle.selectable,
+                  selected: choice.selected,
+                  onSelected: (selected) => choice.select(selected),
+                );
+              },
+              tileBuilder: (context, state) {
+                return InkWell(
+                  onTap: state.showModal,
+                  child: InputDecorator(
+                    isEmpty: _transaction.edges.tags == null ||
+                        _transaction.edges.tags.length == 0,
+                    decoration: const InputDecoration(
+                      labelText: 'Kategorien (ut)',
+                    ),
+                    child: Wrap(
+                      spacing: 12,
+                      children: state.valueObject.map((choice) {
+                        return TagDisplay(
+                          tag: choice.value,
+                          onDeleted: () {
+                            setState(() {
+                              _transaction.edges.tags.remove(choice.value);
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                );
               },
             ),
           ] // Wrap all items with some padding.

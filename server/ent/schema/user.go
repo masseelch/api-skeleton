@@ -43,10 +43,10 @@ func (User) Edges() []ent.Edge {
 		edge.From("accounts", Account.Type).
 			Ref("users").
 			StructTag(`json:"accounts,omitempty" groups:"user:read"`).
-			Annotations(elk.FieldAnnotation{Create: false}),
+			Annotations(elk.FieldAnnotation{SkipCreate: true}),
 		edge.To("transactions", Transaction.Type).
 			StructTag(`json:"transactions,omitempty" groups:"user:read"`).
-			Annotations(elk.FieldAnnotation{Create: false}),
+			Annotations(elk.FieldAnnotation{SkipCreate: true}),
 	}
 }
 

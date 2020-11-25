@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	server "skeleton"
 	"skeleton/ent"
 	"time"
 
@@ -27,7 +28,7 @@ func transactions(refs refs, c *ent.Client) error {
 
 		b[i] = c.Transaction.Create().
 			SetDate(t).
-			SetAmount(randomdata.Number(-100*10, -1)).
+			SetAmount(server.Money(randomdata.Number(-100*10, -1))).
 			SetTitle(fmt.Sprintf("%s %s %s", randomdata.Adjective(), randomdata.Noun(), randomdata.SillyName())).
 			SetAccount(refs.account()).
 			SetUser(refs.user()).

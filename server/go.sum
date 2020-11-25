@@ -160,6 +160,8 @@ github.com/masseelch/elk v0.0.0-20201116225549-bda54f74d493 h1:CCxxM4xGzM5lTp3x3
 github.com/masseelch/elk v0.0.0-20201116225549-bda54f74d493/go.mod h1:X+z17pa5hc3reLO9YXSk+w1ESNhJ95/3I8wIQeFcizs=
 github.com/masseelch/elk v0.0.0-20201118125549-0d8b9a2586d9 h1:EGT/iGm1GnFxP3DR8LooSa4oTmR1jPMfEvvc3YrRmwc=
 github.com/masseelch/elk v0.0.0-20201118125549-0d8b9a2586d9/go.mod h1:X+z17pa5hc3reLO9YXSk+w1ESNhJ95/3I8wIQeFcizs=
+github.com/masseelch/elk v0.0.0-20201125090238-04c2cdfb56e5 h1:9SDAFOJjKwJSa6SyYob5gRE9zpSOxZ1xrSHRNPPy/uM=
+github.com/masseelch/elk v0.0.0-20201125090238-04c2cdfb56e5/go.mod h1:EE80VqnRQUVAjoIm183fuL5OZhNftQ69KviqzauEQ2E=
 github.com/masseelch/go-token v1.0.1 h1:Co9sjjYN2/ut4DPms4E8BgK+7QbX1vSgHQ/u7qWqJfs=
 github.com/masseelch/go-token v1.0.1/go.mod h1:g/Zmrmqahi7zksZFHGt/qAqFKA+y8ONrEGSptUfKvf4=
 github.com/masseelch/render v1.0.1 h1:JWybP54tNbZvCdqrP4jt1db8LPwPB3e41LZi8/1CfvY=

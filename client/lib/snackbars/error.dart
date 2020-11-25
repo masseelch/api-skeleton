@@ -8,8 +8,9 @@ void showErrorSnackBar(
   ScaffoldMessenger.maybeOf(context).removeCurrentSnackBar();
   ScaffoldMessenger.maybeOf(context).showSnackBar(
     SnackBar(
-      content:
-          Text(content ?? AppLocalizations.of(context).snackbarErrorContent),
+      content: Text(
+        content ?? AppLocalizations.of(context).snackbarErrorContent,
+      ),
       backgroundColor: Theme.of(context).errorColor,
     ),
   );

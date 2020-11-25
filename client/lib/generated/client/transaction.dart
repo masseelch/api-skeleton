@@ -113,9 +113,9 @@ class TransactionCreateRequest {
       : date = e.date,
         amount = e.amount,
         title = e.title,
-        user = e.edges.user,
-        account = e.edges.account,
-        tags = e.edges.tags;
+        user = e.edges?.user,
+        account = e.edges?.account,
+        tags = e.edges?.tags;
 
   DateTime date;
   @MoneyConverter()
@@ -145,9 +145,9 @@ class TransactionUpdateRequest {
         date = e.date,
         amount = e.amount,
         title = e.title,
-        user = e.edges.user,
-        account = e.edges.account,
-        tags = e.edges.tags;
+        user = e.edges?.user,
+        account = e.edges?.account,
+        tags = e.edges?.tags;
 
   int id;
   DateTime date;
