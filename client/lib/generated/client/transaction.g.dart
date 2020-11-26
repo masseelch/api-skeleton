@@ -9,7 +9,7 @@ part of 'transaction.dart';
 Map<String, dynamic> _$TransactionCreateRequestToJson(
         TransactionCreateRequest instance) =>
     <String, dynamic>{
-      'date': instance.date?.toIso8601String(),
+      'date': instance.date?.toUtc().toIso8601String(),
       'amount': const MoneyConverter().toJson(instance.amount),
       'title': instance.title,
       'user': instance.user?.toJson(),

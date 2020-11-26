@@ -81,6 +81,9 @@ var serveCmd = &cobra.Command{
 
 			// Tags
 			r.Mount("/tags", handler.NewTagHandler(c, v, l))
+
+			// Transactions
+			r.Mount("/transactions", handler.NewTransactionHandler(c, v, l))
 		})
 
 		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", p), r))

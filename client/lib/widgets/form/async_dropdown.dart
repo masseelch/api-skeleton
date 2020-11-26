@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../trailing_circular_progress_indicator.dart';
+
 typedef ItemBuilder<T> = DropdownMenuItem<T> Function(T item);
 
 class AsyncDropdownButtonFormField<T> extends StatefulWidget {
@@ -82,14 +84,14 @@ class _AsyncDropdownButtonFormFieldState<T>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return DropdownButtonFormField<T>(
-            icon: const AspectRatio(
-              aspectRatio: 1,
-              child: const CircularProgressIndicator(
-                strokeWidth: 2.5,
-              ),
-            ),
-            items: [],
+            icon: const TrailingCircularProgressIndicator(),
+            items: [if (widget.value != null) widget.itemBuilder(widget.value)],
+            value: widget.value,
             onChanged: widget.onChanged,
+            onTap: () {
+              FocusScope.of(context).unfocus();
+              widget.onTap?.call();
+            },
             hint: widget.hint,
             disabledHint: widget.disabledHint,
             elevation: widget.elevation,
@@ -122,7 +124,10 @@ class _AsyncDropdownButtonFormFieldState<T>
           hint: widget.hint,
           disabledHint: widget.disabledHint,
           onChanged: widget.onChanged ?? widget.onSaved,
-          onTap: widget.onTap,
+          onTap: () {
+            FocusScope.of(context).unfocus();
+            widget.onTap?.call();
+          },
           elevation: widget.elevation,
           style: widget.style,
           icon: widget.icon,

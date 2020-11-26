@@ -1,4 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 import 'dart:ui';
@@ -33,6 +35,8 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
+
+  String toString() => jsonEncode(toJson());
 }
 
 @JsonSerializable()

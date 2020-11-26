@@ -1,4 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 import 'dart:ui';
@@ -29,6 +31,8 @@ class Tag {
 
   factory Tag.fromJson(Map<String, dynamic> json) => _$TagFromJson(json);
   Map<String, dynamic> toJson() => _$TagToJson(this);
+
+  String toString() => jsonEncode(toJson());
 }
 
 @JsonSerializable()

@@ -39,6 +39,7 @@ class TagDisplay extends StatelessWidget {
           ),
         ),
         onDeleted: onDeleted,
+        deleteIconColor: foregroundColor,
       );
 
       if (onTap != null) {
@@ -67,8 +68,20 @@ class TagDisplay extends StatelessWidget {
     );
   }
 
-  Color _estimateForegroundColor() =>
-      ThemeData.estimateBrightnessForColor(tag.color) == Brightness.light
-          ? Colors.black
-          : Colors.white;
+  Color _estimateForegroundColor() {
+    final double relativeLuminance = tag.color.computeLuminance();
+
+    // See <https://www.w3.org/TR/WCAG20/#contrast-ratiodef>
+    // The spec says to use kThreshold=0.0525, but Material Design appears to bias
+    // more towards using light text than WCAG20 recommends. Material Design spec
+    // doesn't say what value to use, but 0.15 seemed close to what the Material
+    // Design spec shows for its color palette on
+    // <https://material.io/go/design-theming#color-color-palette>.
+    //
+    // However, for us this still seems to tend towards dark colors too early.
+    const double kThreshold = 0.25;
+    if ((relativeLuminance + 0.05) * (relativeLuminance + 0.05) > kThreshold)
+      return Colors.black;
+    return Colors.white;
+  }
 }

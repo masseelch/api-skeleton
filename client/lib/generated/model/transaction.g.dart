@@ -21,7 +21,7 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'date': instance.date?.toIso8601String(),
+      'date': instance.date?.toUtc().toIso8601String(),
       'amount': const MoneyConverter().toJson(instance.amount),
       'title': instance.title,
       'edges': instance.edges?.toJson(),

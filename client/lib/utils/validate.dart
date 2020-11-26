@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations_de.dart';
 
+import 'money.dart';
+
 class Validate<T> {
   factory Validate({
     AppLocalizations localizations,
@@ -37,8 +39,8 @@ class Validate<T> {
   Validate<T> add(FormFieldValidator<T> fn) =>
       Validate<T>._inner(_localizations, [..._fns, fn]);
 
-  Validate<T> notNull([String msg]) {
-    final err = msg ?? _localizations.validationErrorRequired;
+  Validate<T> notNull({String errorText}) {
+    final err = errorText ?? _localizations.validationErrorRequired;
 
     return add((v) {
       if (v != null) return null;
@@ -47,26 +49,64 @@ class Validate<T> {
     });
   }
 
-  Validate<T> notEmpty([String msg]) {
-    final err = msg ?? _localizations.validationErrorRequired;
+  Validate<T> notEmpty({String errorText}) {
+    final err = errorText ?? _localizations.validationErrorRequired;
 
     return add((v) {
       if (v == null) return err;
 
-      switch (v.runtimeType) {
-        case List:
-          return (v as List).isEmpty ? err : null;
-
-        case String:
-          return (v as String).isEmpty ? err : null;
-
-        case int:
-        case double:
-          return v == 0 ? err : null;
-
-        default:
-          throw UnimplementedError();
+      if (v is List) {
+        return v.isEmpty ? err : null;
       }
+
+      if (v is String) {
+        return v.isEmpty ? err : null;
+      }
+
+      if (v is num) {
+        return v == 0 ? err : null;
+      }
+
+      throw UnimplementedError();
+    });
+  }
+
+  Validate<T> greaterThan(num amount, {String errorText}) {
+    final err =
+        errorText ?? _localizations.validationErrorGreater(amount.toString());
+
+    return add((v) {
+      if (v == null) return null;
+
+      if (v is num) {
+        return v <= amount ? err : null;
+      }
+
+      if (v is Money) {
+        return v.value <= amount ? err : null;
+      }
+
+      print(v.runtimeType);
+      throw UnimplementedError();
+    });
+  }
+
+  Validate<T> minLength(num length, {String errorText}) {
+    final err =
+        errorText ?? _localizations.validationErrorMinLength(length.toString());
+
+    return add((v) {
+      if (v == null) return null;
+
+      if (v is Iterable) {
+        return v.length < length ? err : null;
+      }
+
+      if (v is Map) {
+        return v.length < length ? err : null;
+      }
+      print(v.runtimeType);
+      throw UnimplementedError();
     });
   }
 }

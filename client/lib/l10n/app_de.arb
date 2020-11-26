@@ -4,9 +4,24 @@
   "@appTitle": {
     "description": "The app title"
   },
+  "appFormatMoney": "{money}",
+  "@appFormatMoney": {
+    "description": "The format used when displaying money",
+    "placeholders": {
+      "money": {
+        "type": "double",
+        "format": "simpleCurrency",
+        "example": "1.23 €"
+      }
+    }
+  },
   "appActionOK": "OK",
   "@appActionOK": {
     "description": "Default label of an 'OK' action"
+  },
+  "appActionSave": "Speichern",
+  "@appActionSave": {
+    "description": "Default label of an 'Save' action"
   },
   "appActionSaveChanges": "Änderungen speichern",
   "@appActionSaveChanges": {
@@ -44,6 +59,32 @@
   "@dialogLoadingContent": {
     "description": "Default text on a loading spinner dialog"
   },
+  "formDatePickerDateAfterError": "Datum muss vor dem {date} liegen",
+  "@formDatePickerDateAfterError": {
+    "description": "Default error shown when the selected date is after the last possible date",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd",
+        "example": "01.02.2003"
+      }
+    }
+  },
+  "formDatePickerDateBeforeError": "Datum muss nach dem {date} liegen",
+  "@formDatePickerDateBeforeError": {
+    "description": "Default error shown when the selected date is before the first possible date",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMMd",
+        "example": "01.02.2003"
+      }
+    }
+  },
+  "formDatePickerDateFormatError": "Datum im Format 'tt.mm.jjjj' angeben",
+  "@formDatePickerDateFormatError": {
+    "description": "Default error shown when the given format in date form is not valid"
+  },
   "formDatePickerDateFormat": "dd.MM.yyyy",
   "@formDatePickerDateFormat": {
     "description": "Default date format in date picker form field"
@@ -63,6 +104,10 @@
   "formMoneyLeftSymbol": "",
   "@formMoneyLeftSymbol": {
     "description": "Symbol to display on the left of formatted money"
+  },
+  "formSmartSelectDefaultTitle": "Bitte wählen",
+  "@formSmartSelectDefaultTitle": {
+    "description": "Default title in smart select"
   },
   "snackbarErrorContent": "Es ist unerwartet ein Fehler aufgetreten.",
   "@snackbarErrorContent": {
@@ -147,21 +192,29 @@
   "@screenTransactionTitleEdit": {
     "description": "Title of the transactions edit screen"
   },
-  "screenTransactionFormAmountLabel": "Betrag",
-  "@screenTransactionFormAmountLabel": {
-    "description": "Label of the amount form field in transaction screen"
-  },
   "screenTransactionFormAccountLabel": "Kostenstelle",
   "@screenTransactionFormAccountLabel": {
     "description": "Label of the account form field in transaction screen"
   },
-  "screenTransactionFormTitleLabel": "Beschreibung",
-  "@screenTransactionFormTitleLabel": {
-    "description": "Label of the title form field in transaction screen"
+  "screenTransactionFormAmountLabel": "Betrag",
+  "@screenTransactionFormAmountLabel": {
+    "description": "Label of the amount form field in transaction screen"
+  },
+  "screenTransactionFormAmountError": "Muss mindestens 0,01 Euro betragen",
+  "@screenTransactionFormAmountError": {
+    "description": "Error of the amount form field in transaction screen"
   },
   "screenTransactionFormDateError": "Datum im Format tt.mm.yyyy angeben",
   "@screenTransactionFormDateError": {
-    "description": "Label of the date form field in transaction screen"
+    "description": "Error of the date form field in transaction screen"
+  },
+  "screenTransactionFormTagsError": "Bitte mindestens eine Kategorie angeben",
+  "@screenTransactionFormTagsError": {
+    "description": "Error shown if there are no tags given in transaction screen"
+  },
+  "screenTransactionFormTitleLabel": "Beschreibung",
+  "@screenTransactionFormTitleLabel": {
+    "description": "Label of the title form field in transaction screen"
   },
   "screenTransactionsTitle": "Ausgaben {account}",
   "@screenTransactionsTitle": {
@@ -191,5 +244,25 @@
   "validationErrorRequired": "Dieser Wert ist erforderlich",
   "@validationErrorRequired": {
     "description": "General error when the required validator fails"
+  },
+  "validationErrorGreater": "Dieser Wert muss größer als {greater} sein",
+  "@validationErrorGreater": {
+    "description": "General error when the greater validator fails",
+    "placeholders": {
+      "greater": {
+        "type": "String",
+        "example": "1.0"
+      }
+    }
+  },
+  "validationErrorMinLength": "Liste muss mehr als {length} Einträge haben",
+  "@validationErrorMinLength": {
+    "description": "General error when the minLength validator fails",
+    "placeholders": {
+      "greater": {
+        "type": "String",
+        "example": "1.0"
+      }
+    }
   }
 }

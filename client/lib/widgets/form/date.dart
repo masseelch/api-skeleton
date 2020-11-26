@@ -4,38 +4,45 @@ import 'package:intl/intl.dart';
 
 typedef FormCallback<T> = void Function(T newValue);
 
-class InputDatePickerFormField extends StatefulWidget {
-  InputDatePickerFormField({
+class DateFormField extends StatefulWidget {
+  DateFormField({
     this.initialDate,
     this.firstDate,
     this.lastDate,
-    this.validator,
     this.decoration = const InputDecoration(),
     this.onChanged,
     this.onSaved,
+    this.validator,
+    this.autovalidateMode,
+    this.textInputAction,
+    this.onEditingComplete,
   });
 
   final DateTime initialDate;
   final DateTime firstDate;
   final DateTime lastDate;
-  final FormFieldValidator<DateTime> validator;
   final InputDecoration decoration;
   final ValueChanged<DateTime> onChanged;
   final FormFieldSetter<DateTime> onSaved;
+  final FormFieldValidator<DateTime> validator;
+  final AutovalidateMode autovalidateMode;
+  final TextInputAction textInputAction;
+  final VoidCallback onEditingComplete;
 
   @override
-  _InputDatePickerFormFieldState createState() =>
-      _InputDatePickerFormFieldState();
+  _DateFormFieldState createState() => _DateFormFieldState();
 }
 
-class _InputDatePickerFormFieldState extends State<InputDatePickerFormField> {
+class _DateFormFieldState extends State<DateFormField> {
   TextEditingController _controller;
   DateFormat _dateFormat;
 
-  DateTime get currentValue => _dateFormat.parse(_controller.text);
+  DateTime get currentValue => _dateFormat.parseLoose(_controller.text);
 
   DateTime _firstDate;
   DateTime _lastDate;
+
+  AppLocalizations t;
 
   @override
   void initState() {
@@ -50,9 +57,9 @@ class _InputDatePickerFormFieldState extends State<InputDatePickerFormField> {
     super.didChangeDependencies();
 
     if (_controller == null) {
-      _dateFormat = DateFormat(
-        AppLocalizations.of(context).formDatePickerDateFormat,
-      );
+      t = AppLocalizations.of(context);
+
+      _dateFormat = DateFormat(t.formDatePickerDateFormat);
 
       _controller = TextEditingController(
         text: _dateFormat.format(widget.initialDate ?? DateTime.now()),
@@ -78,19 +85,52 @@ class _InputDatePickerFormFieldState extends State<InputDatePickerFormField> {
             decoration: widget.decoration,
             onSaved: _cb(widget.onSaved),
             onChanged: _cb(widget.onChanged),
+            autovalidateMode: widget.autovalidateMode,
+            textInputAction: widget.textInputAction,
+            onEditingComplete: widget.onEditingComplete,
+            validator: (v) {
+              if (v == null || v.isEmpty) {
+                return widget.validator?.call(null);
+              }
+
+              try {
+                final d = _dateFormat.parseLoose(v);
+
+                if (d.isBefore(_firstDate)) {
+                  return t.formDatePickerDateBeforeError(_firstDate);
+                }
+
+                if (d.isAfter(_lastDate)) {
+                  return t.formDatePickerDateAfterError(_lastDate);
+                }
+
+                return widget.validator?.call(_dateFormat.parseLoose(v));
+              } catch (_) {
+                return t.formDatePickerDateFormatError;
+              }
+            },
           ),
         ),
         IconButton(
           icon: const Icon(Icons.calendar_today),
           onPressed: () async {
+            FocusScope.of(context).unfocus();
+            DateTime old;
+
+            try {
+              old = currentValue;
+            } catch (_) {
+              old = DateTime.now();
+            }
+
             final d = await showDatePicker(
               context: context,
-              initialDate: currentValue,
+              initialDate: old,
               firstDate: _firstDate,
               lastDate: _lastDate,
             );
 
-            if (d != null && d != currentValue) {
+            if (d != null && d != old) {
               widget.onChanged?.call(d);
               setState(() {
                 _controller.text = _dateFormat.format(d);
