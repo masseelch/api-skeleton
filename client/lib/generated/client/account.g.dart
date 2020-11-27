@@ -10,8 +10,8 @@ Map<String, dynamic> _$AccountCreateRequestToJson(
         AccountCreateRequest instance) =>
     <String, dynamic>{
       'title': instance.title,
-      'users': instance.users?.map((e) => e?.toJson())?.toList(),
-      'transactions': instance.transactions?.map((e) => e?.toJson())?.toList(),
+      'users': instance.users,
+      'transactions': instance.transactions,
     };
 
 Map<String, dynamic> _$AccountUpdateRequestToJson(
@@ -19,6 +19,6 @@ Map<String, dynamic> _$AccountUpdateRequestToJson(
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
-      'users': instance.users?.map((e) => e?.toJson())?.toList(),
-      'transactions': instance.transactions?.map((e) => e?.toJson())?.toList(),
+      'users': instance.users,
+      'transactions': instance.transactions,
     };

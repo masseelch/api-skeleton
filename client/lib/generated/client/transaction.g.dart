@@ -9,22 +9,22 @@ part of 'transaction.dart';
 Map<String, dynamic> _$TransactionCreateRequestToJson(
         TransactionCreateRequest instance) =>
     <String, dynamic>{
-      'date': instance.date?.toUtc().toIso8601String(),
+      'date': const DateUtcConverter().toJson(instance.date),
       'amount': const MoneyConverter().toJson(instance.amount),
       'title': instance.title,
-      'user': instance.user?.toJson(),
-      'account': instance.account?.toJson(),
-      'tags': instance.tags?.map((e) => e?.toJson())?.toList(),
+      'user': instance.user,
+      'account': instance.account,
+      'tags': instance.tags,
     };
 
 Map<String, dynamic> _$TransactionUpdateRequestToJson(
         TransactionUpdateRequest instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'date': instance.date?.toIso8601String(),
+      'date': const DateUtcConverter().toJson(instance.date),
       'amount': const MoneyConverter().toJson(instance.amount),
       'title': instance.title,
-      'user': instance.user?.toJson(),
-      'account': instance.account?.toJson(),
-      'tags': instance.tags?.map((e) => e?.toJson())?.toList(),
+      'user': instance.user,
+      'account': instance.account,
+      'tags': instance.tags,
     };

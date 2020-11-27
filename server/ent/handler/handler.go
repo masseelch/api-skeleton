@@ -103,8 +103,18 @@ func (h AccountHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read new entry.
+	q := h.client.Account.Query().Where(account.ID(e.ID))
+
+	e1, err := q.Only(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error reading Account")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
 	// Serialize the data.
-	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:read"}}, e)
+	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"account:read"}}, e1)
 	if err != nil {
 		h.logger.WithError(err).WithField("Account.id", e.ID).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -360,7 +370,7 @@ func (h AccountHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list", "account:list"}}, es)
 	if err != nil {
 		h.logger.WithError(err).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -443,8 +453,18 @@ func (h TagHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read new entry.
+	q := h.client.Tag.Query().Where(tag.ID(e.ID))
+
+	e1, err := q.Only(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error reading Tag")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
 	// Serialize the data.
-	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"tag:read"}}, e)
+	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"tag:read"}}, e1)
 	if err != nil {
 		h.logger.WithError(err).WithField("Tag.id", e.ID).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -637,7 +657,7 @@ func (h TagHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list", "account:list"}}, es)
 	if err != nil {
 		h.logger.WithError(err).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -728,8 +748,24 @@ func (h TransactionHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read new entry.
+	q := h.client.Transaction.Query().Where(transaction.ID(e.ID))
+
+	q.WithUser()
+
+	q.WithAccount()
+
+	q.WithTags()
+
+	e1, err := q.Only(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error reading Transaction")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
 	// Serialize the data.
-	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:read"}}, e)
+	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:read", "user:list", "tag:list", "account:list"}}, e1)
 	if err != nil {
 		h.logger.WithError(err).WithField("Transaction.id", e.ID).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -1093,8 +1129,18 @@ func (h UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Read new entry.
+	q := h.client.User.Query().Where(user.ID(e.ID))
+
+	e1, err := q.Only(r.Context())
+	if err != nil {
+		h.logger.WithError(err).Error("error reading User")
+		render.InternalServerError(w, r, nil)
+		return
+	}
+
 	// Serialize the data.
-	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:read"}}, e)
+	j, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"user:read"}}, e1)
 	if err != nil {
 		h.logger.WithError(err).WithField("User.id", e.ID).Error("serialization error")
 		render.InternalServerError(w, r, nil)
@@ -1397,7 +1443,7 @@ func (h UserHandler) Transactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list"}}, es)
+	d, err := sheriff.Marshal(&sheriff.Options{Groups: []string{"transaction:list", "user:list", "tag:list", "account:list"}}, es)
 	if err != nil {
 		h.logger.WithError(err).Error("serialization error")
 		render.InternalServerError(w, r, nil)

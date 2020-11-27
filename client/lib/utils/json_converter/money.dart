@@ -6,8 +6,8 @@ class MoneyConverter implements JsonConverter<Money, int> {
   const MoneyConverter();
 
   @override
-  Money fromJson(int json) => Money(json);
+  Money fromJson(int json) => json == null ? null : Money(json);
 
   @override
-  int toJson(Money object) => object.value;
+  int toJson(Money object) => object?.value;
 }

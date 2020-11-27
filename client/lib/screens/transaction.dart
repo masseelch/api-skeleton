@@ -46,12 +46,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
     _transaction = widget.transaction ?? Transaction()
       ..date = DateTime.now()
-      ..edges = TransactionEdges();
+      ..edges = (TransactionEdges()..account = widget.account);
   }
 
   @override
   Widget build(BuildContext context) {
-    final focus = FocusScope.of(context);
     final t = AppLocalizations.of(context);
 
     return Scaffold(
@@ -64,7 +63,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       persistentFooterButtons: [
         FlatButton.icon(
-          label: Text(t.appActionSave), // todo - make all dates utc + createRequest edges have to be primaryKey or server has to take objects instead of ids
+          label: Text(t.appActionSave),
           icon: const Icon(Icons.save),
           onPressed: () async {
             if (_formKey.currentState.validate()) {
@@ -77,7 +76,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 if (_transaction.id == null) {
                   transaction = await TransactionClient.of(context).create(
                     TransactionCreateRequest.fromTransaction(_transaction)
-                      ..user = await TokenService.of(context).getUser(),
+                      ..user = (await TokenService.of(context).getUser()).id,
                   );
                 } else {
                   transaction = await TransactionClient.of(context).update(
@@ -124,9 +123,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
               onSaved: (v) => _transaction.amount = v,
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: Validate<Money>().notNull().greaterThan(
-                    0,
-                    errorText: t.screenTransactionFormAmountError,
-                  ),
+                0,
+                errorText: t.screenTransactionFormAmountError,
+              ),
               textInputAction: TextInputAction.next,
             ),
             TextFormField(

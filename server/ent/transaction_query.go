@@ -351,7 +351,7 @@ func (tq *TransactionQuery) WithTags(opts ...func(*TagQuery)) *TransactionQuery 
 // Example:
 //
 //	var v []struct {
-//		Date time.Time `json:"date,omitempty" groups:"transaction:list"`
+//		Date time.Time `json:"date,omitempty" groups:"transaction:list,transaction:read"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
@@ -377,7 +377,7 @@ func (tq *TransactionQuery) GroupBy(field string, fields ...string) *Transaction
 // Example:
 //
 //	var v []struct {
-//		Date time.Time `json:"date,omitempty" groups:"transaction:list"`
+//		Date time.Time `json:"date,omitempty" groups:"transaction:list,transaction:read"`
 //	}
 //
 //	client.Transaction.Query().

@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
 
+import '../date_utc_converter.dart';
+
 import 'dart:ui';
 import '../../utils/json_converter/color.dart';
 import '../../utils/money.dart';
@@ -80,6 +82,7 @@ class TagClient {
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class TagCreateRequest {
   TagCreateRequest({
     this.title,
@@ -90,17 +93,18 @@ class TagCreateRequest {
   TagCreateRequest.fromTag(Tag e)
       : title = e.title,
         color = e.color,
-        transactions = e.edges?.transactions;
+        transactions = e.edges?.transactions?.map((e) => e.id)?.toList();
 
   String title;
   @ColorConverter()
   Color color;
-  List<Transaction> transactions;
+  List<int> transactions;
 
   Map<String, dynamic> toJson() => _$TagCreateRequestToJson(this);
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class TagUpdateRequest {
   TagUpdateRequest({
     this.id,
@@ -113,13 +117,13 @@ class TagUpdateRequest {
       : id = e.id,
         title = e.title,
         color = e.color,
-        transactions = e.edges?.transactions;
+        transactions = e.edges?.transactions?.map((e) => e.id)?.toList();
 
   int id;
   String title;
   @ColorConverter()
   Color color;
-  List<Transaction> transactions;
+  List<int> transactions;
 
   Map<String, dynamic> toJson() => _$TagUpdateRequestToJson(this);
 }

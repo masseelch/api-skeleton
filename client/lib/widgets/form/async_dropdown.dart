@@ -87,7 +87,7 @@ class _AsyncDropdownButtonFormFieldState<T>
             icon: const TrailingCircularProgressIndicator(),
             items: [if (widget.value != null) widget.itemBuilder(widget.value)],
             value: widget.value,
-            onChanged: widget.onChanged,
+            onChanged: widget.onChanged ?? widget.onSaved,
             onTap: () {
               FocusScope.of(context).unfocus();
               widget.onTap?.call();

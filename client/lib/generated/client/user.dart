@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
 
+import '../date_utc_converter.dart';
+
 import 'dart:ui';
 import '../../utils/json_converter/color.dart';
 import '../../utils/money.dart';
@@ -109,6 +111,7 @@ class UserClient {
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class UserCreateRequest {
   UserCreateRequest({
     this.email,
@@ -135,6 +138,7 @@ class UserCreateRequest {
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class UserUpdateRequest {
   UserUpdateRequest({
     this.id,
@@ -154,8 +158,8 @@ class UserUpdateRequest {
         enabled = e.enabled,
         firstName = e.firstName,
         lastName = e.lastName,
-        accounts = e.edges?.accounts,
-        transactions = e.edges?.transactions;
+        accounts = e.edges?.accounts?.map((e) => e.id)?.toList(),
+        transactions = e.edges?.transactions?.map((e) => e.id)?.toList();
 
   int id;
   String email;
@@ -163,8 +167,8 @@ class UserUpdateRequest {
   bool enabled;
   String firstName;
   String lastName;
-  List<Account> accounts;
-  List<Transaction> transactions;
+  List<int> accounts;
+  List<int> transactions;
 
   Map<String, dynamic> toJson() => _$UserUpdateRequestToJson(this);
 }

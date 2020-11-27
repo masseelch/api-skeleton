@@ -10,6 +10,6 @@ class Money {
   double toDouble() => _value / 100;
 
   Money operator +(Money other) {
-    return Money(value + other.value);
+    return Money(value + (other?.value ?? 0));
   }
 }

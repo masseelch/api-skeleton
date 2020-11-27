@@ -18,14 +18,14 @@ type Transaction struct {
 func (Transaction) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int("id").
-			StructTag(`groups:"transaction:list"`),
+			StructTag(`groups:"transaction:list,transaction:read"`),
 		field.Time("date").
-			StructTag(`groups:"transaction:list"`),
+			StructTag(`groups:"transaction:list,transaction:read"`),
 		field.Int("amount").
 			GoType(server.Money(0)).
-			StructTag(`groups:"transaction:list"`),
+			StructTag(`groups:"transaction:list,transaction:read"`),
 		field.String("title").
-			StructTag(`groups:"transaction:list"`),
+			StructTag(`groups:"transaction:list,transaction:read"`),
 	}
 }
 
@@ -35,14 +35,14 @@ func (Transaction) Edges() []ent.Edge {
 		edge.From("user", User.Type).
 			Ref("transactions").
 			Unique().
-			StructTag(`json:"user,omitempty" groups:"transaction:list"`),
+			StructTag(`json:"user,omitempty" groups:"transaction:list,transaction:read"`),
 		edge.From("account", Account.Type).
 			Ref("transactions").
 			Unique().
-			StructTag(`json:"account,omitempty" groups:"transaction:list"`),
+			StructTag(`json:"account,omitempty" groups:"transaction:list,transaction:read"`),
 		edge.To("tags", Tag.Type).
 			Required().
-			StructTag(`json:"tags,omitempty" groups:"transaction:list"`),
+			StructTag(`json:"tags,omitempty" groups:"transaction:list,transaction:read"`),
 	}
 }
 
@@ -50,10 +50,11 @@ func (Transaction) Edges() []ent.Edge {
 func (Transaction) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		edge.Annotation{
-			StructTag: `json:"edges" groups:"transaction:list"`,
+			StructTag: `json:"edges" groups:"transaction:list,transaction:read"`,
 		},
 		elk.HandlerAnnotation{
-			ListGroups: []string{"transaction:list", "user:list", "tag:list"},
+			ListGroups:   []string{"transaction:list", "user:list", "tag:list", "account:list"},
+			CreateGroups: []string{"transaction:read", "user:list", "tag:list", "account:list"},
 		},
 	}
 }

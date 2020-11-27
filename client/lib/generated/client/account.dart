@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:provider/provider.dart';
 
+import '../date_utc_converter.dart';
+
 import 'dart:ui';
 import '../../utils/json_converter/color.dart';
 import '../../utils/money.dart';
@@ -82,6 +84,7 @@ class AccountClient {
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class AccountCreateRequest {
   AccountCreateRequest({
     this.title,
@@ -91,17 +94,18 @@ class AccountCreateRequest {
 
   AccountCreateRequest.fromAccount(Account e)
       : title = e.title,
-        users = e.edges?.users,
-        transactions = e.edges?.transactions;
+        users = e.edges?.users?.map((e) => e.id)?.toList(),
+        transactions = e.edges?.transactions?.map((e) => e.id)?.toList();
 
   String title;
-  List<User> users;
-  List<Transaction> transactions;
+  List<int> users;
+  List<int> transactions;
 
   Map<String, dynamic> toJson() => _$AccountCreateRequestToJson(this);
 }
 
 @JsonSerializable(createFactory: false)
+@DateUtcConverter()
 class AccountUpdateRequest {
   AccountUpdateRequest({
     this.id,
@@ -113,13 +117,13 @@ class AccountUpdateRequest {
   AccountUpdateRequest.fromAccount(Account e)
       : id = e.id,
         title = e.title,
-        users = e.edges?.users,
-        transactions = e.edges?.transactions;
+        users = e.edges?.users?.map((e) => e.id)?.toList(),
+        transactions = e.edges?.transactions?.map((e) => e.id)?.toList();
 
   int id;
   String title;
-  List<User> users;
-  List<Transaction> transactions;
+  List<int> users;
+  List<int> transactions;
 
   Map<String, dynamic> toJson() => _$AccountUpdateRequestToJson(this);
 }

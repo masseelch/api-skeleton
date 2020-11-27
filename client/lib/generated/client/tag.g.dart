@@ -10,7 +10,7 @@ Map<String, dynamic> _$TagCreateRequestToJson(TagCreateRequest instance) =>
     <String, dynamic>{
       'title': instance.title,
       'color': const ColorConverter().toJson(instance.color),
-      'transactions': instance.transactions?.map((e) => e?.toJson())?.toList(),
+      'transactions': instance.transactions,
     };
 
 Map<String, dynamic> _$TagUpdateRequestToJson(TagUpdateRequest instance) =>
@@ -18,5 +18,5 @@ Map<String, dynamic> _$TagUpdateRequestToJson(TagUpdateRequest instance) =>
       'id': instance.id,
       'title': instance.title,
       'color': const ColorConverter().toJson(instance.color),
-      'transactions': instance.transactions?.map((e) => e?.toJson())?.toList(),
+      'transactions': instance.transactions,
     };

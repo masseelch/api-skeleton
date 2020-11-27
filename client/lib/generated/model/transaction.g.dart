@@ -9,8 +9,7 @@ part of 'transaction.dart';
 Transaction _$TransactionFromJson(Map<String, dynamic> json) {
   return Transaction()
     ..id = json['id'] as int
-    ..date =
-        json['date'] == null ? null : DateTime.parse(json['date'] as String)
+    ..date = const DateUtcConverter().fromJson(json['date'] as String)
     ..amount = const MoneyConverter().fromJson(json['amount'] as int)
     ..title = json['title'] as String
     ..edges = json['edges'] == null
@@ -21,7 +20,7 @@ Transaction _$TransactionFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$TransactionToJson(Transaction instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'date': instance.date?.toUtc().toIso8601String(),
+      'date': const DateUtcConverter().toJson(instance.date),
       'amount': const MoneyConverter().toJson(instance.amount),
       'title': instance.title,
       'edges': instance.edges?.toJson(),

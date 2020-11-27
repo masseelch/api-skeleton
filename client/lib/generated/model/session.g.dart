@@ -9,12 +9,10 @@ part of 'session.dart';
 Session _$SessionFromJson(Map<String, dynamic> json) {
   return Session()
     ..id = json['id']
-    ..idleTimeExpiredAt = json['idleTimeExpiredAt'] == null
-        ? null
-        : DateTime.parse(json['idleTimeExpiredAt'] as String)
-    ..lifeTimeExpiredAt = json['lifeTimeExpiredAt'] == null
-        ? null
-        : DateTime.parse(json['lifeTimeExpiredAt'] as String)
+    ..idleTimeExpiredAt =
+        const DateUtcConverter().fromJson(json['idleTimeExpiredAt'] as String)
+    ..lifeTimeExpiredAt =
+        const DateUtcConverter().fromJson(json['lifeTimeExpiredAt'] as String)
     ..edges = json['edges'] == null
         ? null
         : SessionEdges.fromJson(json['edges'] as Map<String, dynamic>);
@@ -22,8 +20,10 @@ Session _$SessionFromJson(Map<String, dynamic> json) {
 
 Map<String, dynamic> _$SessionToJson(Session instance) => <String, dynamic>{
       'id': instance.id,
-      'idleTimeExpiredAt': instance.idleTimeExpiredAt?.toIso8601String(),
-      'lifeTimeExpiredAt': instance.lifeTimeExpiredAt?.toIso8601String(),
+      'idleTimeExpiredAt':
+          const DateUtcConverter().toJson(instance.idleTimeExpiredAt),
+      'lifeTimeExpiredAt':
+          const DateUtcConverter().toJson(instance.lifeTimeExpiredAt),
       'edges': instance.edges?.toJson(),
     };
 

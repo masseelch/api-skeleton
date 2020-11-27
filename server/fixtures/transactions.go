@@ -21,7 +21,7 @@ func (r refs) transaction() *ent.Transaction {
 func transactions(refs refs, c *ent.Client) error {
 	b := make([]*ent.TransactionCreate, transactionCount)
 	for i := 0; i < transactionCount; i++ {
-		t, err := time.Parse(randomdata.DateOutputLayout, randomdata.FullDate())
+		t, err := time.Parse(randomdata.DateOutputLayout, randomdata.FullDateInRange(time.Now().String()))
 		if err != nil {
 			return err
 		}

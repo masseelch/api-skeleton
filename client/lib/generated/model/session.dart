@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
+import '../date_utc_converter.dart';
+
 import 'dart:ui';
 import '../../utils/json_converter/color.dart';
 import '../../utils/money.dart';
@@ -13,6 +15,7 @@ import '../model/user.dart';
 part 'session.g.dart';
 
 @JsonSerializable()
+@DateUtcConverter()
 class Session {
   Session();
 

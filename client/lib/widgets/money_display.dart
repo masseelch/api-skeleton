@@ -17,7 +17,7 @@ class MoneyDisplay extends StatelessWidget {
       t.appFormatMoney(money.value / 100),
       textAlign: TextAlign.right,
       style: theme.textTheme.headline5.copyWith(
-        color: theme.accentColor,
+        color: money.value > 0 ? theme.primaryColor : theme.errorColor,
       ),
     );
   }

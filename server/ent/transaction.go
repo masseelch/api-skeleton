@@ -17,16 +17,16 @@ import (
 type Transaction struct {
 	config `groups:"-" json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty" groups:"transaction:list"`
+	ID int `json:"id,omitempty" groups:"transaction:list,transaction:read"`
 	// Date holds the value of the "date" field.
-	Date time.Time `json:"date,omitempty" groups:"transaction:list"`
+	Date time.Time `json:"date,omitempty" groups:"transaction:list,transaction:read"`
 	// Amount holds the value of the "amount" field.
-	Amount server.Money `json:"amount,omitempty" groups:"transaction:list"`
+	Amount server.Money `json:"amount,omitempty" groups:"transaction:list,transaction:read"`
 	// Title holds the value of the "title" field.
-	Title string `json:"title,omitempty" groups:"transaction:list"`
+	Title string `json:"title,omitempty" groups:"transaction:list,transaction:read"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TransactionQuery when eager-loading is set.
-	Edges                TransactionEdges `json:"edges" groups:"transaction:list"`
+	Edges                TransactionEdges `json:"edges" groups:"transaction:list,transaction:read"`
 	account_transactions *int
 	user_transactions    *int
 }
@@ -34,11 +34,11 @@ type Transaction struct {
 // TransactionEdges holds the relations/edges for other nodes in the graph.
 type TransactionEdges struct {
 	// User holds the value of the user edge.
-	User *User `json:"user,omitempty" groups:"transaction:list"`
+	User *User `json:"user,omitempty" groups:"transaction:list,transaction:read"`
 	// Account holds the value of the account edge.
-	Account *Account `json:"account,omitempty" groups:"transaction:list"`
+	Account *Account `json:"account,omitempty" groups:"transaction:list,transaction:read"`
 	// Tags holds the value of the tags edge.
-	Tags []*Tag `json:"tags,omitempty" groups:"transaction:list"`
+	Tags []*Tag `json:"tags,omitempty" groups:"transaction:list,transaction:read"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [3]bool

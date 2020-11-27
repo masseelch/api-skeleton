@@ -23,4 +23,6 @@ Map<String, dynamic> _$UserUpdateRequestToJson(UserUpdateRequest instance) =>
       'enabled': instance.enabled,
       'firstName': instance.firstName,
       'lastName': instance.lastName,
+      'accounts': instance.accounts,
+      'transactions': instance.transactions,
     };

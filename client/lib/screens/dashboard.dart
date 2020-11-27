@@ -1,3 +1,4 @@
+import 'package:client/generated/model/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -66,11 +67,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: appBar,
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final transaction = await Navigator.push<Transaction>(
             context,
             MaterialPageRoute(builder: (_) => TransactionScreen()),
           );
+
+          if (transaction != null) {
+            final accounts = await _accounts$;
+            accounts
+                .firstWhere((acc) => acc == transaction.edges.account)
+                .edges
+                .transactions
+                .add(transaction);
+
+            setState(() {
+              _accounts$ = Future.value(accounts);
+            });
+          }
         },
       ),
       body: FutureBuilder<List<Account>>(
@@ -115,27 +129,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-class _AccountTile extends StatefulWidget {
+class _AccountTile extends StatelessWidget {
   _AccountTile({this.account, this.month});
 
   final Account account;
   final DateTime month;
 
-  @override
-  __AccountTileState createState() => __AccountTileState();
-}
-
-class __AccountTileState extends State<_AccountTile> {
-  Money _expenses;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _expenses = widget.account.edges.transactions
-        .where((t) => !t.date.isSameMonth(widget.month))
-        .fold<Money>(Money(0), (p, e) => p + e.amount);
-  }
+  Money get expenses => account.edges.transactions
+      .where((t) => t.date.isSameMonth(month))
+      .fold<Money>(Money(0), (p, e) => p + e.amount);
 
   @override
   Widget build(BuildContext context) {
@@ -144,7 +146,7 @@ class __AccountTileState extends State<_AccountTile> {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => TransactionsScreen(account: widget.account),
+          builder: (context) => TransactionsScreen(account: account),
         ));
       },
       child: Padding(
@@ -156,12 +158,12 @@ class __AccountTileState extends State<_AccountTile> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.account.title,
+                  account.title,
                   style: theme.textTheme.subtitle1,
                 ),
               ],
             ),
-            MoneyDisplay(_expenses),
+            MoneyDisplay(expenses),
           ],
         ),
       ),
